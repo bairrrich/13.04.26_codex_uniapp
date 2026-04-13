@@ -1,0 +1,17 @@
+{
+  "name": "@superapp/expo",
+  "private": true,
+  "scripts": {
+    "dev": "expo start",
+    "build": "expo export",
+    "lint": "echo \"TODO: configure expo lint\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "expo": "^53.0.0",
+    "react": "^19.0.0",
+    "react-native": "^0.76.0",
+    "@superapp/app": "workspace:*",
+    "@superapp/ui": "workspace:*"
+  }
+}
