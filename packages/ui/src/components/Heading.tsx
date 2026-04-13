@@ -1,18 +1,21 @@
 import { tokens } from '../tokens';
+import type { CSSProperties, ReactNode } from 'react';
 
 export interface HeadingProps {
-  children: React.ReactNode;
-  level?: 1 | 2 | 3 | 4;
+  children: ReactNode;
+  level?: 1 | 2 | 3 | 4 | 5;
   textAlign?: 'left' | 'center' | 'right';
-  style?: React.CSSProperties;
+  style?: CSSProperties;
   className?: string;
+  gradient?: boolean;
 }
 
-const sizeMap = {
-  1: { fontSize: tokens.fontSizes['3xl'], fontWeight: 700 },
-  2: { fontSize: tokens.fontSizes['2xl'], fontWeight: 600 },
-  3: { fontSize: tokens.fontSizes.xl, fontWeight: 600 },
-  4: { fontSize: tokens.fontSizes.lg, fontWeight: 600 },
+const levelConfig = {
+  1: { fontSize: tokens.fontSizes['4xl'], fontWeight: tokens.fontWeights.bold, margin: '0 0 16px' },
+  2: { fontSize: tokens.fontSizes['3xl'], fontWeight: tokens.fontWeights.bold, margin: '0 0 12px' },
+  3: { fontSize: tokens.fontSizes['2xl'], fontWeight: tokens.fontWeights.semibold, margin: '0 0 8px' },
+  4: { fontSize: tokens.fontSizes.xl, fontWeight: tokens.fontWeights.semibold, margin: '0 0 8px' },
+  5: { fontSize: tokens.fontSizes.lg, fontWeight: tokens.fontWeights.semibold, margin: '0 0 4px' },
 } as const;
 
 export function Heading({
@@ -21,18 +24,26 @@ export function Heading({
   textAlign,
   style,
   className,
+  gradient = false,
 }: HeadingProps) {
   const Component = `h${level}` as const;
-  const sizes = sizeMap[level];
+  const config = levelConfig[level];
 
   return (
     <Component
       className={className}
       style={{
-        margin: 0,
-        color: tokens.colors.text,
+        margin: config.margin,
+        color: gradient ? 'transparent' : tokens.colors.text,
+        fontSize: config.fontSize,
+        fontWeight: config.fontWeight,
         textAlign,
-        ...sizes,
+        lineHeight: 1.3,
+        ...(gradient && {
+          backgroundImage: `linear-gradient(135deg, ${tokens.colors.primary}, ${tokens.colors.success})`,
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+        }),
         ...style,
       }}
     >

@@ -1,17 +1,19 @@
 import { tokens } from '../tokens';
+import type { CSSProperties, ReactNode } from 'react';
 
 export interface ButtonProps {
-  children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+  children: ReactNode;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
   loading?: boolean;
   disabled?: boolean;
   onPress?: () => void;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   type?: 'button' | 'submit' | 'reset';
-  style?: React.CSSProperties;
+  style?: CSSProperties;
   className?: string;
+  icon?: ReactNode;
 }
 
 export function Button({
@@ -26,55 +28,107 @@ export function Button({
   type = 'button',
   style,
   className,
+  icon,
 }: ButtonProps) {
-  const sizeMap = {
-    sm: { padding: '6px 12px', fontSize: tokens.fontSizes.sm },
-    md: { padding: '10px 16px', fontSize: tokens.fontSizes.md },
-    lg: { padding: '12px 20px', fontSize: tokens.fontSizes.lg },
+  const sizeMap: Record<string, { padding: string; fontSize: number; gap: number; borderRadius: number }> = {
+    xs: { padding: '4px 8px', fontSize: tokens.fontSizes.xs, gap: 4, borderRadius: tokens.radius.md },
+    sm: { padding: '6px 12px', fontSize: tokens.fontSizes.sm, gap: 6, borderRadius: tokens.radius.md },
+    md: { padding: '10px 16px', fontSize: tokens.fontSizes.md, gap: 8, borderRadius: tokens.radius.lg },
+    lg: { padding: '14px 24px', fontSize: tokens.fontSizes.lg, gap: 10, borderRadius: tokens.radius.lg },
   };
 
-  const variantMap = {
+  const variantMap: Record<string, { background: string; color: string; hover: string; border?: string }> = {
     primary: {
-      backgroundColor: tokens.colors.primary,
+      background: tokens.colors.primary,
       color: '#ffffff',
+      hover: tokens.colors.primaryHover,
     },
     secondary: {
-      backgroundColor: tokens.colors.surface,
+      background: tokens.colors.surface,
       color: tokens.colors.text,
+      hover: tokens.colors.surfaceHover,
+      border: tokens.colors.border,
     },
     ghost: {
-      backgroundColor: 'transparent',
+      background: 'transparent',
       color: tokens.colors.text,
+      hover: tokens.colors.surface,
     },
     danger: {
-      backgroundColor: tokens.colors.error,
+      background: tokens.colors.error,
       color: '#ffffff',
+      hover: 'rgba(239, 68, 68, 0.9)',
+    },
+    success: {
+      background: tokens.colors.success,
+      color: '#ffffff',
+      hover: 'rgba(34, 197, 94, 0.9)',
     },
   };
+
+  const s = sizeMap[size];
+  const v = variantMap[variant];
+  const isDisabled = disabled || loading;
 
   return (
     <button
       type={type}
-      disabled={disabled || loading}
+      disabled={isDisabled}
       onClick={(e) => {
         onClick?.(e);
-        onPress?.();
+        if (!isDisabled) onPress?.();
       }}
       className={className}
       style={{
-        ...sizeMap[size],
-        ...variantMap[variant],
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: s.gap,
+        padding: s.padding,
+        fontSize: s.fontSize,
+        fontWeight: tokens.fontWeights.semibold,
+        fontFamily: 'inherit',
+        background: v.background,
+        color: v.color,
+        border: v.border ? `1px solid ${v.border}` : 'none',
+        borderRadius: s.borderRadius,
         width: fullWidth ? '100%' : undefined,
-        borderRadius: tokens.radius.lg,
-        border: variant === 'ghost' ? 'none' : 'none',
-        fontWeight: 600,
-        cursor: disabled || loading ? 'not-allowed' : 'pointer',
-        transition: 'transform 0.15s, opacity 0.15s',
-        opacity: disabled || loading ? 0.6 : 1,
+        cursor: isDisabled ? 'not-allowed' : 'pointer',
+        opacity: isDisabled ? 0.6 : 1,
+        transition: `all ${tokens.transitions.fast}`,
+        boxShadow: variant === 'primary' ? `0 2px 8px ${tokens.colors.primaryLight}` : 'none',
+        position: 'relative',
+        overflow: 'hidden',
+        whiteSpace: 'nowrap',
         ...style,
       }}
+      onMouseEnter={(e) => {
+        if (!isDisabled) {
+          (e.currentTarget as HTMLElement).style.background = v.hover;
+          (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+          (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 12px ${tokens.colors.primaryLight}`;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isDisabled) {
+          (e.currentTarget as HTMLElement).style.background = v.background;
+          (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+          (e.currentTarget as HTMLElement).style.boxShadow = variant === 'primary' ? `0 2px 8px ${tokens.colors.primaryLight}` : 'none';
+        }
+      }}
     >
-      {loading ? '...' : children}
+      {loading && (
+        <span style={{
+          width: 14,
+          height: 14,
+          border: `2px solid ${v.color}40`,
+          borderTopColor: v.color,
+          borderRadius: '50%',
+          animation: 'spin 0.6s linear infinite',
+        }} />
+      )}
+      {!loading && icon}
+      {children}
     </button>
   );
 }

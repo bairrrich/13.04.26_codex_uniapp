@@ -108,7 +108,15 @@ importers:
         specifier: ^0.31.10
         version: 0.31.10
 
-  packages/ui: {}
+  packages/ui:
+    dependencies:
+      react:
+        specifier: ^19.0.0
+        version: 19.2.5
+    devDependencies:
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
 
 packages:
 
