@@ -39,6 +39,7 @@ export function AnalyticsTab() {
 
   const maxExpense = expenseBreakdown.length > 0 ? expenseBreakdown[0].total : 1;
   const maxIncome = incomeBreakdown.length > 0 ? incomeBreakdown[0].total : 1;
+  const totalExpense = expenseBreakdown.reduce((sum, c) => sum + c.total, 0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -104,7 +105,7 @@ export function AnalyticsTab() {
         )}
       </Card>
 
-      {/* Expense breakdown */}
+      {/* Expense breakdown with Pie Chart */}
       <Card padding="lg">
         <Text fontWeight="semibold" size="lg" style={{ marginBottom: 16 }}>📉 Расходы по категориям</Text>
         {loading ? (
@@ -112,24 +113,47 @@ export function AnalyticsTab() {
             {[1, 2, 3].map((i) => <Skeleton key={i} width="100%" height={24} />)}
           </div>
         ) : expenseBreakdown.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {expenseBreakdown.map((cat, i) => {
-              const width = (cat.total / maxExpense) * 100;
-              return (
-                <div key={cat.category_id}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <Text size="sm">
-                      {cat.category_icon ?? ''} {cat.category_name}
-                    </Text>
-                    <Text size="sm" fontWeight="semibold">{formatCurrency(cat.total)}</Text>
-                  </div>
-                  <div style={{ height: 6, borderRadius: 3, background: tokens.colors.border, overflow: 'hidden' }}>
-                    <div style={{ width: `${width}%`, height: '100%', background: cat.category_color, borderRadius: 3, transition: `width ${tokens.transitions.slow}` }} />
-                  </div>
+          <>
+            {/* Simple Pie Chart */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+              <div style={{
+                width: 160,
+                height: 160,
+                borderRadius: '50%',
+                background: `conic-gradient(${expenseBreakdown.map((cat, i) => `${cat.category_color} ${i === 0 ? 0 : expenseBreakdown.slice(0, i).reduce((s, c) => s + c.total, 0) / totalExpense * 100}% ${cat.total / totalExpense * 100}%`).join(', ')})`,
+                boxShadow: tokens.shadows.md,
+              }} />
+            </div>
+
+            {/* Legend */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
+              {expenseBreakdown.map((cat) => (
+                <div key={cat.category_id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 2, background: cat.category_color }} />
+                  <Text muted size="xs">{cat.category_icon} {cat.category_name}</Text>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+
+            {/* Bars */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {expenseBreakdown.map((cat) => {
+                const width = (cat.total / maxExpense) * 100;
+                const percentage = ((cat.total / totalExpense) * 100).toFixed(0);
+                return (
+                  <div key={cat.category_id}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <Text size="sm" as="span">{cat.category_icon ?? ''} {cat.category_name} <Text muted as="span">({percentage}%)</Text></Text>
+                      <Text size="sm" fontWeight="semibold">{formatCurrency(cat.total)}</Text>
+                    </div>
+                    <div style={{ height: 6, borderRadius: 3, background: tokens.colors.border, overflow: 'hidden' }}>
+                      <div style={{ width: `${width}%`, height: '100%', background: cat.category_color, borderRadius: 3, transition: `width ${tokens.transitions.slow}` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         ) : (
           <Text muted>Нет данных о расходах</Text>
         )}

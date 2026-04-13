@@ -132,7 +132,8 @@ export function TransactionsTab({ onAddReady }: { onAddReady?: (fn: () => void) 
   };
 
   const handleSave = async () => {
-    if (!formAccountId || !formAmount || parseInt(formAmount, 10) <= 0) return;
+    if (!formAccountId || !formAmount || isNaN(parseFloat(formAmount)) || parseFloat(formAmount) <= 0) return;
+    const amountMinor = Math.round(parseFloat(formAmount) * 100);
     setSaving(true);
     try {
       if (formKind === 'transfer') {
@@ -147,7 +148,7 @@ export function TransactionsTab({ onAddReady }: { onAddReady?: (fn: () => void) 
         await transferService.create({
           from_account_id: formAccountId,
           to_account_id: formToAccountId,
-          amount_minor: parseInt(formAmount, 10),
+          amount_minor: amountMinor,
           description: formDescription || undefined,
           occurred_at: formDate ? new Date(formDate).toISOString() : undefined,
         });
@@ -157,7 +158,7 @@ export function TransactionsTab({ onAddReady }: { onAddReady?: (fn: () => void) 
             account_id: formAccountId,
             category_id: formCategoryId || null,
             kind: formKind,
-            amount_minor: parseInt(formAmount, 10),
+            amount_minor: amountMinor,
             description: formDescription || undefined,
             occurred_at: formDate ? new Date(formDate).toISOString() : undefined,
           });
@@ -166,7 +167,7 @@ export function TransactionsTab({ onAddReady }: { onAddReady?: (fn: () => void) 
             account_id: formAccountId,
             category_id: formCategoryId || null,
             kind: formKind,
-            amount_minor: parseInt(formAmount, 10),
+            amount_minor: amountMinor,
             description: formDescription || undefined,
             occurred_at: formDate ? new Date(formDate).toISOString() : undefined,
           });
@@ -197,7 +198,7 @@ export function TransactionsTab({ onAddReady }: { onAddReady?: (fn: () => void) 
     setFormKind(tx.kind);
     setFormAccountId(tx.account_id);
     setFormCategoryId(tx.category_id ?? '');
-    setFormAmount(String(tx.amount_minor));
+    setFormAmount(String(tx.amount_minor / 100));
     setFormDescription(tx.description ?? '');
     setFormDate(tx.occurred_at.slice(0, 16));
     setModalOpen(true);
@@ -209,7 +210,7 @@ export function TransactionsTab({ onAddReady }: { onAddReady?: (fn: () => void) 
     setFormKind('transfer');
     setFormAccountId(tf.from_account_id);
     setFormToAccountId(tf.to_account_id);
-    setFormAmount(String(tf.amount_minor));
+    setFormAmount(String(tf.amount_minor / 100));
     setFormDescription(tf.description ?? '');
     setFormDate(tf.occurred_at.slice(0, 16));
     setModalOpen(true);
@@ -252,8 +253,8 @@ export function TransactionsTab({ onAddReady }: { onAddReady?: (fn: () => void) 
                 </div>
               </div>
               <div>
-                <Text muted size="sm" style={{ marginBottom: 4 }}>Сумма</Text>
-                <Input type="number" value={formAmount} onChange={(e) => setFormAmount(e.target.value)} placeholder="1000" fullWidth />
+                <Text muted size="sm" style={{ marginBottom: 4 }}>Сумма (₽)</Text>
+                <Input type="number" value={formAmount} onChange={(e) => setFormAmount(e.target.value)} placeholder="1000" step="0.01" fullWidth />
               </div>
             </>
           ) : (
@@ -267,8 +268,39 @@ export function TransactionsTab({ onAddReady }: { onAddReady?: (fn: () => void) 
                 <Select options={[{ value: '', label: 'Без категории' }, ...filteredCategories.map((c) => ({ value: c.id, label: `${c.icon ?? ''} ${c.name}`.trim() }))]} value={formCategoryId} onChange={(e) => setFormCategoryId(e.target.value)} fullWidth />
               </div>
               <div>
-                <Text muted size="sm" style={{ marginBottom: 4 }}>Сумма (в копейках/центах)</Text>
-                <Input type="number" value={formAmount} onChange={(e) => setFormAmount(e.target.value)} placeholder="1000" fullWidth />
+                <Text muted size="sm" style={{ marginBottom: 4 }}>Сумма (₽)</Text>
+                <Input
+                  type="number"
+                  value={formAmount}
+                  onChange={(e) => setFormAmount(e.target.value)}
+                  placeholder="1000"
+                  step="0.01"
+                  fullWidth
+                />
+                {!editingTxId && (
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                    {[100, 500, 1000, 5000, 10000].map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setFormAmount(String(v))}
+                        style={{
+                          padding: '4px 12px',
+                          borderRadius: 16,
+                          border: `1px solid ${tokens.colors.border}`,
+                          background: formAmount === String(v) ? tokens.colors.primaryLight : 'transparent',
+                          color: formAmount === String(v) ? tokens.colors.primary : tokens.colors.muted,
+                          cursor: 'pointer',
+                          fontSize: tokens.fontSizes.xs,
+                          fontWeight: tokens.fontWeights.medium,
+                          transition: `all ${tokens.transitions.fast}`,
+                        }}
+                      >
+                        {v >= 1000 ? `${v / 1000}k` : v}₽
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -385,7 +417,7 @@ export function TransactionsTab({ onAddReady }: { onAddReady?: (fn: () => void) 
                           {isIncome ? 'Доход' : 'Расход'}
                         </Badge>
                         {category && (
-                          <Badge variant="default">{category.icon ?? ''} {category.name}</Badge>
+                          <Badge variant="default" size="sm" style={{ borderLeft: `3px solid ${category.color || tokens.colors.primary}`, paddingLeft: 6 }}>{category.icon ?? ''} {category.name}</Badge>
                         )}
                       </div>
                       {tx.description && <Text size="sm">{tx.description}</Text>}

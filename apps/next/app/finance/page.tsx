@@ -10,10 +10,12 @@ import { TransactionsTab } from '../../src/features/finance/components/Transacti
 import { CategoriesTab } from '../../src/features/finance/components/CategoriesTab';
 import { BudgetsTab } from '../../src/features/finance/components/BudgetsTab';
 import { RecurringTab } from '../../src/features/finance/components/RecurringTab';
+import { GoalsTab } from '../../src/features/finance/components/GoalsTab';
+import { InvestmentsTab } from '../../src/features/finance/components/InvestmentsTab';
 import { AnalyticsTab } from '../../src/features/finance/components/AnalyticsTab';
 import { useIsMobile } from '../../src/hooks/useIsMobile';
 
-const TABS = ['Обзор', 'Счета', 'Транзакции', 'Категории', 'Бюджеты', 'Повторения', 'Аналитика'] as const;
+const TABS = ['Обзор', 'Счета', 'Транзакции', 'Категории', 'Бюджеты', 'Цели', 'Инвестиции', 'Повторения', 'Аналитика'] as const;
 type Tab = (typeof TABS)[number];
 
 function formatCurrency(amountMinor: number): string {
@@ -26,6 +28,8 @@ const tabActions: Record<Tab, { label: string; icon: string } | null> = {
   'Транзакции': { label: 'Добавить операцию', icon: '💳' },
   'Категории': { label: 'Добавить категорию', icon: '📁' },
   'Бюджеты': { label: 'Добавить бюджет', icon: '📊' },
+  'Цели': { label: 'Добавить цель', icon: '🎯' },
+  'Инвестиции': { label: 'Добавить инвестицию', icon: '📈' },
   'Повторения': { label: 'Добавить повторение', icon: '🔄' },
   'Аналитика': null,
 };
@@ -166,6 +170,8 @@ export default function FinancePage() {
       {activeTab === 'Транзакции' && <TransactionsTab onAddReady={handleTransactionsAdd} />}
       {activeTab === 'Категории' && <CategoriesTab onAddReady={handleCategoriesAdd} />}
       {activeTab === 'Бюджеты' && <BudgetsTab onAddReady={handleBudgetsAdd} />}
+      {activeTab === 'Цели' && <GoalsTab onAddReady={(fn) => setTriggerAdd(() => fn)} />}
+      {activeTab === 'Инвестиции' && <InvestmentsTab onAddReady={(fn) => setTriggerAdd(() => fn)} />}
       {activeTab === 'Повторения' && <RecurringTab onAddReady={handleRecurringAdd} />}
       {activeTab === 'Аналитика' && <AnalyticsTab />}
     </AppLayout>

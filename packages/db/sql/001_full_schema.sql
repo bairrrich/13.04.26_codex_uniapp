@@ -102,6 +102,28 @@ create table if not exists accounts (
 create index if not exists idx_accounts_user_id
   on accounts (user_id);
 
+-- Financial goals
+create table if not exists goals (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  name text not null,
+  target_amount bigint not null check (target_amount > 0),
+  current_amount bigint not null default 0 check (current_amount >= 0),
+  deadline timestamptz,
+  icon text default '🎯',
+  color text default '#5B6CFF',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_goals_user_id
+  on goals (user_id);
+
+drop trigger if exists update_goals_updated_at on goals;
+create trigger update_goals_updated_at
+  before update on goals
+  for each row execute procedure public.update_updated_at_column();
+
 create table if not exists transaction_categories (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references users(id) on delete cascade,
@@ -384,55 +406,74 @@ create or replace function auth_user_id() returns uuid as $$
 $$ language sql stable;
 
 -- Users: can only read/update their own profile
+drop policy if exists "Users can view own profile" on users;
 create policy "Users can view own profile"
   on users for select using (id = auth_user_id());
 
+drop policy if exists "Users can update own profile" on users;
 create policy "Users can update own profile"
   on users for update using (id = auth_user_id());
 
 -- Generic policy template for all user-scoped tables
+drop policy if exists "Users can manage own diary entries" on diary_entries;
 create policy "Users can manage own diary entries"
   on diary_entries for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own tags" on tags;
 create policy "Users can manage own tags"
   on tags for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own diary_entry_tags" on diary_entry_tags;
 create policy "Users can manage own diary_entry_tags"
   on diary_entry_tags for all using (
     entry_id in (select id from diary_entries where user_id = auth_user_id())
   );
 
+drop policy if exists "Users can manage own accounts" on accounts;
 create policy "Users can manage own accounts"
   on accounts for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own goals" on goals;
+create policy "Users can manage own goals"
+  on goals for all using (user_id = auth_user_id());
+
+drop policy if exists "Users can read global categories" on transaction_categories;
 create policy "Users can read global categories"
   on transaction_categories for select using (user_id is null);
 
+drop policy if exists "Users can manage own categories" on transaction_categories;
 create policy "Users can manage own categories"
   on transaction_categories for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own transactions" on transactions;
 create policy "Users can manage own transactions"
   on transactions for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own meal logs" on meal_logs;
 create policy "Users can manage own meal logs"
   on meal_logs for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own meal items" on meal_items;
 create policy "Users can manage own meal items"
   on meal_items for all using (
     meal_log_id in (select id from meal_logs where user_id = auth_user_id())
   );
 
+drop policy if exists "Users can manage own water logs" on water_logs;
 create policy "Users can manage own water logs"
   on water_logs for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own workouts" on workout_sessions;
 create policy "Users can manage own workouts"
   on workout_sessions for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own workout exercises" on workout_exercises;
 create policy "Users can manage own workout exercises"
   on workout_exercises for all using (
     session_id in (select id from workout_sessions where user_id = auth_user_id())
   );
 
+drop policy if exists "Users can manage own workout sets" on workout_sets;
 create policy "Users can manage own workout sets"
   on workout_sets for all using (
     workout_exercise_id in (
@@ -442,50 +483,112 @@ create policy "Users can manage own workout sets"
     )
   );
 
+drop policy if exists "Users can manage own collections" on collection_items;
 create policy "Users can manage own collections"
   on collection_items for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own feed posts" on feed_posts;
 create policy "Users can manage own feed posts"
   on feed_posts for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own feed comments" on feed_comments;
 create policy "Users can manage own feed comments"
   on feed_comments for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own feed likes" on feed_likes;
 create policy "Users can manage own feed likes"
   on feed_likes for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own activity events" on activity_events;
 create policy "Users can manage own activity events"
   on activity_events for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own budgets" on budgets;
 create policy "Users can manage own budgets"
   on budgets for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own recurring rules" on recurring_rules;
 create policy "Users can manage own recurring rules"
   on recurring_rules for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own transfers" on transfers;
 create policy "Users can manage own transfers"
   on transfers for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own recipes" on recipes;
 create policy "Users can manage own recipes"
   on recipes for all using (user_id = auth_user_id());
 
+drop policy if exists "Users can manage own recipe items" on recipe_items;
 create policy "Users can manage own recipe items"
   on recipe_items for all using (
     recipe_id in (select id from recipes where user_id = auth_user_id())
   );
 
+drop policy if exists "Users can manage own diary media" on diary_media;
 create policy "Users can manage own diary media"
   on diary_media for all using (
     entry_id in (select id from diary_entries where user_id = auth_user_id())
   );
 
 -- Exercise definitions: everyone can read
+drop policy if exists "Everyone can read exercises" on exercise_definitions;
 create policy "Everyone can read exercises"
   on exercise_definitions for select using (true);
 
 -- Food items: everyone can read
+drop policy if exists "Everyone can read food items" on food_items;
 create policy "Everyone can read food items"
   on food_items for select using (true);
+
+-- ============================================================
+-- 7b. INVESTMENTS
+-- ============================================================
+
+create table if not exists investment_assets (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  symbol text not null,
+  name text not null,
+  currency_code char(3) not null default 'RUB',
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_investment_assets_user_id
+  on investment_assets (user_id);
+
+create table if not exists investment_positions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  asset_id uuid not null references investment_assets(id) on delete cascade,
+  quantity numeric(20,8) not null,
+  avg_price_minor bigint not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_investment_positions_user_id
+  on investment_positions (user_id);
+
+alter table investment_assets enable row level security;
+alter table investment_positions enable row level security;
+
+drop policy if exists "Users can manage own investment assets" on investment_assets;
+create policy "Users can manage own investment assets"
+  on investment_assets for all using (user_id = auth_user_id());
+
+drop policy if exists "Users can manage own investment positions" on investment_positions;
+create policy "Users can manage own investment positions"
+  on investment_positions for all using (user_id = auth_user_id());
+
+drop trigger if exists update_investment_assets_updated_at on investment_assets;
+create trigger update_investment_assets_updated_at
+  before update on investment_assets
+  for each row execute procedure public.update_updated_at_column();
+
+drop trigger if exists update_investment_positions_updated_at on investment_positions;
+create trigger update_investment_positions_updated_at
+  before update on investment_positions
+  for each row execute procedure public.update_updated_at_column();
 
 -- ============================================================
 -- 9. TRIGGERS
@@ -560,24 +663,28 @@ begin
 end;
 $$ language plpgsql;
 
+-- Diary
+drop trigger if exists update_diary_entries_updated_at on diary_entries;
 create trigger update_diary_entries_updated_at
   before update on diary_entries
   for each row execute procedure public.update_updated_at_column();
 
+-- Collections
+drop trigger if exists update_collection_items_updated_at on collection_items;
 create trigger update_collection_items_updated_at
   before update on collection_items
   for each row execute procedure public.update_updated_at_column();
 
+-- Accounts
+drop trigger if exists update_accounts_updated_at on accounts;
 create trigger update_accounts_updated_at
   before update on accounts
   for each row execute procedure public.update_updated_at_column();
 
+-- Transactions
+drop trigger if exists update_transactions_updated_at on transactions;
 create trigger update_transactions_updated_at
   before update on transactions
-  for each row execute procedure public.update_updated_at_column();
-
-create trigger update_workout_sessions_updated_at
-  before update on workout_sessions
   for each row execute procedure public.update_updated_at_column();
 
 -- ============================================================

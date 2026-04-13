@@ -20,6 +20,9 @@ export interface InputProps {
   name?: string;
   required?: boolean;
   autoFocus?: boolean;
+  step?: string | number;
+  min?: string | number;
+  max?: string | number;
 }
 
 export function Input({
@@ -41,6 +44,9 @@ export function Input({
   name,
   required,
   autoFocus,
+  step,
+  min,
+  max,
 }: InputProps) {
   const baseStyle: CSSProperties = {
     width: fullWidth ? '100%' : undefined,
@@ -90,6 +96,9 @@ export function Input({
         disabled={disabled}
         required={required}
         autoFocus={autoFocus}
+        step={step}
+        min={min}
+        max={max}
         className={className}
         style={baseStyle}
         onFocus={(e) => {
