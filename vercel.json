@@ -1,0 +1,6 @@
+{
+  "installCommand": "node -e \"const fs=require('fs');const p='apps/next/package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));for(const key of ['dependencies','devDependencies']){if(!j[key]) continue;for(const dep of Object.keys(j[key])){if(String(j[key][dep]).startsWith('workspace:')) delete j[key][dep];}}fs.writeFileSync(p,JSON.stringify(j,null,2));\" && npm --prefix apps/next install",
+  "buildCommand": "npm --prefix apps/next run build",
+  "framework": "nextjs",
+  "ignoreCommand": "echo 'always build'"
+}
