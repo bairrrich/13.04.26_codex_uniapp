@@ -63,6 +63,30 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
+          /* Responsive grids */
+          @media (max-width: 768px) {
+            .grid-responsive {
+              grid-template-columns: 1fr !important;
+            }
+            .grid-2col {
+              grid-template-columns: 1fr 1fr !important;
+            }
+            .hide-mobile {
+              display: none !important;
+            }
+            .flex-wrap-mobile {
+              flex-wrap: wrap !important;
+            }
+          }
+          /* Modal full screen on mobile */
+          @media (max-width: 640px) {
+            .modal-content {
+              max-width: 100vw !important;
+              max-height: 100vh !important;
+              margin: 0 !important;
+              border-radius: 0 !important;
+            }
+          }
         `}</style>
       </head>
       <body style={{ margin: 0, fontFamily: 'Inter, system-ui, -apple-system, sans-serif', background: '#0B1020', color: '#F4F7FF' }}>

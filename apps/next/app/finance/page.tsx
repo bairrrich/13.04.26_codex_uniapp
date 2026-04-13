@@ -11,6 +11,7 @@ import { CategoriesTab } from '../../src/features/finance/components/CategoriesT
 import { BudgetsTab } from '../../src/features/finance/components/BudgetsTab';
 import { RecurringTab } from '../../src/features/finance/components/RecurringTab';
 import { AnalyticsTab } from '../../src/features/finance/components/AnalyticsTab';
+import { useIsMobile } from '../../src/hooks/useIsMobile';
 
 const TABS = ['Обзор', 'Счета', 'Транзакции', 'Категории', 'Бюджеты', 'Повторения', 'Аналитика'] as const;
 type Tab = (typeof TABS)[number];
@@ -22,6 +23,7 @@ function formatCurrency(amountMinor: number): string {
 export default function FinancePage() {
   const [activeTab, setActiveTab] = useState<Tab>('Обзор');
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile(768);
   const [totalBalance, setTotalBalance] = useState(0);
   const [incomeMonth, setIncomeMonth] = useState(0);
   const [expenseMonth, setExpenseMonth] = useState(0);
@@ -51,14 +53,14 @@ export default function FinancePage() {
   return (
     <AppLayout headerTitle="Финансы" headerSubtitle="Управление бюджетом">
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, flexWrap: 'wrap', overflowX: 'auto', paddingBottom: 8 }}>
+      <div style={{ display: 'flex', gap: isMobile ? 2 : 4, marginBottom: 24, flexWrap: 'wrap', overflowX: 'auto', paddingBottom: 8 }}>
         {TABS.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             style={{
-              padding: '8px 16px',
-              fontSize: tokens.fontSizes.sm,
+              padding: isMobile ? '6px 10px' : '8px 16px',
+              fontSize: isMobile ? tokens.fontSizes.xs : tokens.fontSizes.sm,
               fontWeight: activeTab === tab ? tokens.fontWeights.semibold : tokens.fontWeights.medium,
               color: activeTab === tab ? tokens.colors.primary : tokens.colors.textSecondary,
               backgroundColor: activeTab === tab ? tokens.colors.primaryLight : 'transparent',
@@ -78,7 +80,7 @@ export default function FinancePage() {
       {activeTab === 'Обзор' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Summary Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: isMobile ? 8 : 16 }}>
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <Card key={i} padding="lg">
@@ -176,6 +178,8 @@ function QuickAction({ icon, label, color, onClick }: { icon: string; label: str
         cursor: 'pointer',
         transition: `all ${tokens.transitions.fast}`,
         fontFamily: 'inherit',
+        flex: '1 1 auto',
+        minWidth: 0,
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLElement).style.borderColor = color;

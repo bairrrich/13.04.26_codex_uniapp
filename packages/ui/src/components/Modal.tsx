@@ -59,7 +59,7 @@ export function Modal({
 
       {/* Modal Content */}
       <div
-        className={className}
+        className={`modal-content ${className || ''}`}
         onClick={(e) => e.stopPropagation()}
         style={{
           position: 'relative',
