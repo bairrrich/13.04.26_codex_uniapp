@@ -12,7 +12,7 @@ Web-приложение на Next.js (SSR/SEO) для SuperApp.
 
 1. Push репозиторий в `https://github.com/bairrrich/13.04.26_codex_uniapp`.
 2. В Vercel: **Add New Project** → Import Git Repository.
-3. Root Directory: `apps/next`.
+3. Build Command: `npm run build` (в корне, автоматически билдит `apps/next`).
 4. Добавьте env vars:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`

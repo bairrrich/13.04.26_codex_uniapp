@@ -3,7 +3,8 @@
   "private": true,
   "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "build": "turbo run build",
+    "build": "npm --prefix apps/next run build",
+    "build:turbo": "turbo run build",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck"
