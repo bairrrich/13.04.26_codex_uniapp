@@ -1,6 +1,7 @@
 'use client';
 
 import { collectionsService, type CollectionItem } from '../services/collectionsService';
+import { Card, Text, Badge, Select, Button, type SelectOption } from '@superapp/ui';
 
 interface CollectionListProps {
   items: CollectionItem[];
@@ -8,11 +9,18 @@ interface CollectionListProps {
   onRefresh: () => void;
 }
 
-const statusLabels: Record<string, string> = {
-  planned: '📋 Запланировано',
-  in_progress: '⏳ В процессе',
-  completed: '✅ Завершено',
-  dropped: '❌ Отменено',
+const statusOptions: SelectOption[] = [
+  { value: 'planned', label: '📋 Запланировано' },
+  { value: 'in_progress', label: '⏳ В процессе' },
+  { value: 'completed', label: '✅ Завершено' },
+  { value: 'dropped', label: '❌ Отменено' },
+];
+
+const statusVariantMap: Record<string, 'default' | 'warning' | 'success' | 'error'> = {
+  planned: 'default',
+  in_progress: 'warning',
+  completed: 'success',
+  dropped: 'error',
 };
 
 const typeEmojis: Record<string, string> = { book: '📚', movie: '🎬', recipe: '🍳', supplement: '💊' };
@@ -46,51 +54,38 @@ export function CollectionList({ items, loading, onRefresh }: CollectionListProp
     }
   };
 
-  if (loading) return <div style={{ padding: 24, textAlign: 'center' }}>Загрузка...</div>;
-  if (items.length === 0) return <div style={{ padding: 24, textAlign: 'center', color: '#888' }}>Коллекция пуста</div>;
+  if (loading) return <Text style={{ padding: 24, textAlign: 'center' }}>Загрузка...</Text>;
+  if (items.length === 0) return <Text muted style={{ padding: 24, textAlign: 'center' }}>Коллекция пуста</Text>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {items.map((item) => (
-        <div
-          key={item.id}
-          style={{
-            padding: 14,
-            borderRadius: 10,
-            border: '1px solid #333',
-            background: '#111827',
-          }}
-        >
+        <Card key={item.id} padding="md">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-            <div>
-              <span style={{ fontSize: 20, marginRight: 8 }}>{typeEmojis[item.type]}</span>
-              <strong>{item.title}</strong>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Text size="lg">{typeEmojis[item.type]}</Text>
+              <Text fontWeight={700}>{item.title}</Text>
             </div>
-            <button
-              onClick={() => handleDelete(item.id)}
-              style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', fontSize: 16 }}
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={() => handleDelete(item.id)}
+              style={{ color: '#ff6b6b', fontSize: 16, padding: 4 }}
             >
               ✕
-            </button>
+            </Button>
           </div>
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <select
+            <Select
+              options={statusOptions}
               value={item.status}
               onChange={(e) => handleStatusChange(item.id, e.target.value as CollectionItem['status'])}
-              style={{
-                padding: '4px 8px',
-                borderRadius: 4,
-                border: '1px solid #444',
-                background: '#1a1a2e',
-                color: '#F4F7FF',
-                fontSize: 13,
-              }}
-            >
-              {Object.entries(statusLabels).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
-            </select>
+            />
+
+            <Badge variant={statusVariantMap[item.status] ?? 'default'} size="sm">
+              {statusOptions.find((s) => s.value === item.status)?.label}
+            </Badge>
 
             <div style={{ display: 'flex', gap: 4 }}>
               {[1, 2, 3, 4, 5].map((r) => (
@@ -110,7 +105,7 @@ export function CollectionList({ items, loading, onRefresh }: CollectionListProp
               ))}
             </div>
           </div>
-        </div>
+        </Card>
       ))}
     </div>
   );

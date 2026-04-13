@@ -5,7 +5,11 @@
       "Bash(pnpm *)",
       "Bash(taskkill *)",
       "Bash(npx *)",
-      "Bash(mkdir *)"
+      "Bash(mkdir *)",
+      "Bash(del *)",
+      "Bash(@powershell *)",
+      "Bash(findstr *)",
+      "Bash(move *)"
     ]
   },
   "$version": 3

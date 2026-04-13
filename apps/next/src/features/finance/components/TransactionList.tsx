@@ -2,6 +2,7 @@
 
 import type { Transaction, Account, Category } from '../services/financeService';
 import { transactionService } from '../services/financeService';
+import { Card, Text, Badge } from '@superapp/ui';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -50,13 +51,13 @@ export function TransactionList({ transactions, accounts, categories, loading, o
   };
 
   if (loading) {
-    return <div style={{ padding: 24, textAlign: 'center' }}>Загрузка...</div>;
+    return <div style={{ padding: 24, textAlign: 'center' }}><Text muted>Загрузка...</Text></div>;
   }
 
   if (transactions.length === 0) {
     return (
-      <div style={{ padding: 24, textAlign: 'center', color: '#888' }}>
-        <p>Транзакций пока нет. Создайте первую!</p>
+      <div style={{ padding: 24, textAlign: 'center' }}>
+        <Text muted>Транзакций пока нет. Создайте первую!</Text>
       </div>
     );
   }
@@ -68,30 +69,13 @@ export function TransactionList({ transactions, accounts, categories, loading, o
         const currency = getCurrency(tx.account_id);
 
         return (
-          <div
-            key={tx.id}
-            style={{
-              padding: 16,
-              borderRadius: 10,
-              border: '1px solid #333',
-              background: '#111827',
-            }}
-          >
+          <Card key={tx.id} padding="lg">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: 6,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    background: isIncome ? '#0d2818' : '#2d1215',
-                    color: isIncome ? '#34d399' : '#ff6b6b',
-                  }}
-                >
+                <Badge variant={isIncome ? 'success' : 'error'}>
                   {isIncome ? 'Доход' : 'Расход'}
-                </span>
-                <span style={{ fontSize: 13, color: '#888' }}>{formatDate(tx.occurred_at)}</span>
+                </Badge>
+                <Text muted size="sm">{formatDate(tx.occurred_at)}</Text>
               </div>
               <button
                 onClick={() => handleDelete(tx.id)}
@@ -109,23 +93,21 @@ export function TransactionList({ transactions, accounts, categories, loading, o
               </button>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-              <div style={{ display: 'flex', gap: 12, fontSize: 13, color: '#aaa' }}>
-                <span>{getAccountName(tx.account_id)}</span>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <Text muted size="sm">{getAccountName(tx.account_id)}</Text>
                 {getCategoryName(tx.category_id) && (
-                  <span style={{ color: '#5B6CFF' }}>{getCategoryName(tx.category_id)}</span>
+                  <Text size="sm" style={{ color: '#5B6CFF' }}>{getCategoryName(tx.category_id)}</Text>
                 )}
               </div>
-              <span
-                style={{
-                  fontWeight: 700,
-                  fontSize: 16,
-                  color: isIncome ? '#34d399' : '#ff6b6b',
-                }}
+              <Text
+                fontWeight={700}
+                size="lg"
+                style={{ color: isIncome ? '#34d399' : '#ff6b6b' }}
               >
                 {isIncome ? '+' : '-'}{formatAmount(tx.amount_minor, currency)}
-              </span>
+              </Text>
             </div>
-          </div>
+          </Card>
         );
       })}
     </div>

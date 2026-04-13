@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { DiaryEntryList } from '../../src/features/diary/components/DiaryEntryList';
 import { DiaryEntryForm } from '../../src/features/diary/components/DiaryEntryForm';
 import { diaryService, type DiaryEntry } from '../../src/features/diary/services/diaryService';
+import { Heading, Card, Text } from '@superapp/ui';
 
 export default function DiaryPage() {
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
@@ -29,14 +30,14 @@ export default function DiaryPage() {
 
   return (
     <main style={{ maxWidth: 720, margin: '0 auto', padding: 24 }}>
-      <h1>📔 Дневник</h1>
+      <Heading style={{ marginBottom: 24 }}>📔 Дневник</Heading>
 
       <DiaryEntryForm onSuccess={fetchEntries} />
 
       {error && (
-        <div style={{ padding: 16, borderRadius: 8, background: '#2d1215', border: '1px solid #ff6b6b', marginBottom: 16 }}>
-          <p style={{ color: '#ff6b6b', margin: 0 }}>{error}</p>
-        </div>
+        <Card padding="lg" style={{ marginBottom: 16, borderColor: '#ff6b6b' }}>
+          <Text error>{error}</Text>
+        </Card>
       )}
 
       <DiaryEntryList entries={entries} loading={loading} onRefresh={fetchEntries} />

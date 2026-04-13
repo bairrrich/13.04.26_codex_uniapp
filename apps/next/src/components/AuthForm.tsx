@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { supabase } from '../lib/supabase';
+import { Button, Input, Card, Text } from '@superapp/ui';
 
 export function AuthForm() {
   const [email, setEmail] = useState('');
@@ -47,64 +48,57 @@ export function AuthForm() {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '40px auto', padding: 24, border: '1px solid #333', borderRadius: 12 }}>
-      <h2 style={{ marginTop: 0 }}>{isSignUp ? 'Регистрация' : 'Вход'}</h2>
+    <Card padding="2xl" style={{ maxWidth: 400, margin: '40px auto' }}>
+      <Text as="div" fontWeight={600} size="xl" style={{ marginBottom: 16 }}>
+        {isSignUp ? 'Регистрация' : 'Вход'}
+      </Text>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={{ padding: 10, borderRadius: 6, border: '1px solid #555', background: '#1a1a2e', color: '#fff' }}
-        />
-        <input
-          type="password"
-          placeholder="Пароль"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{ padding: 10, borderRadius: 6, border: '1px solid #555', background: '#1a1a2e', color: '#fff' }}
-        />
+      <form onSubmit={handleSubmit}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
+          <Input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            fullWidth
+          />
+          <Input
+            type="password"
+            placeholder="Пароль"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            fullWidth
+          />
+        </div>
 
-        {error && <p style={{ color: '#ff6b6b', margin: 0 }}>{error}</p>}
-        {message && <p style={{ color: '#51cf66', margin: 0 }}>{message}</p>}
+        {error && (
+          <Text error style={{ marginBottom: 12 }}>
+            {error}
+          </Text>
+        )}
+        {message && (
+          <Text success style={{ marginBottom: 12 }}>
+            {message}
+          </Text>
+        )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: 12,
-            borderRadius: 6,
-            border: 'none',
-            background: '#5B6CFF',
-            color: '#fff',
-            cursor: loading ? 'wait' : 'pointer',
-            fontWeight: 600,
-          }}
-        >
-          {loading ? 'Загрузка...' : isSignUp ? 'Зарегистрироваться' : 'Войти'}
-        </button>
+        <Button type="submit" loading={loading} fullWidth size="lg">
+          {isSignUp ? 'Зарегистрироваться' : 'Войти'}
+        </Button>
       </form>
 
-      <button
-        onClick={() => {
+      <Button
+        style={{ marginTop: 12 }}
+        variant="ghost"
+        fullWidth
+        onPress={() => {
           setIsSignUp(!isSignUp);
           setError(null);
           setMessage(null);
         }}
-        style={{
-          marginTop: 12,
-          background: 'none',
-          border: 'none',
-          color: '#5B6CFF',
-          cursor: 'pointer',
-          textDecoration: 'underline',
-        }}
       >
         {isSignUp ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Зарегистрироваться'}
-      </button>
-    </div>
+      </Button>
+    </Card>
   );
 }

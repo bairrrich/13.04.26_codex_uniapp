@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { waterLogService } from '../services/nutritionService';
+import { Button, Card, Input, Text } from '@superapp/ui';
 
 interface WaterFormProps {
   onSuccess?: () => void;
@@ -37,8 +38,8 @@ export function WaterForm({ onSuccess }: WaterFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
-      <h3 style={{ margin: '0 0 16px', color: '#F4F7FF' }}>💧 Вода</h3>
+    <Card padding="2xl" style={{ marginBottom: 24 }}>
+      <Text fontWeight={600} size="lg" style={{ marginBottom: 16 }}>💧 Вода</Text>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
         {quickAmounts.map((ml) => (
@@ -63,47 +64,25 @@ export function WaterForm({ onSuccess }: WaterFormProps) {
       </div>
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <input
+        <Input
           type="number"
           placeholder="Своё количество (мл)"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          min={1}
-          required
-          style={{
-            flex: 1,
-            padding: 12,
-            borderRadius: 8,
-            border: '1px solid #333',
-            background: '#111827',
-            color: '#F4F7FF',
-            fontSize: 15,
-          }}
+          fullWidth
         />
-        <button
-          type="submit"
-          disabled={loading || !amount}
-          style={{
-            padding: '10px 24px',
-            borderRadius: 8,
-            border: 'none',
-            background: amount ? '#5B6CFF' : '#333',
-            color: '#fff',
-            cursor: !amount || loading ? 'not-allowed' : 'pointer',
-            fontWeight: 600,
-            fontSize: 15,
-          }}
+        <Button
+          loading={loading}
+          disabled={!amount}
+          size="lg"
+          onClick={handleSubmit}
         >
-          {loading ? '...' : 'Записать'}
-        </button>
+          Записать
+        </Button>
       </div>
 
-      {error && <p style={{ color: '#ff6b6b', marginTop: 8 }}>{error}</p>}
-      {success && (
-        <p style={{ color: '#4ade80', marginTop: 8 }}>
-          Вода записана! ✓
-        </p>
-      )}
-    </form>
+      {error && <Text error style={{ marginTop: 12 }}>{error}</Text>}
+      {success && <Text success style={{ marginTop: 12 }}>Вода записана! ✓</Text>}
+    </Card>
   );
 }

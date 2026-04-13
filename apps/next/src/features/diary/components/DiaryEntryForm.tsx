@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { diaryService } from '../services/diaryService';
+import { Button, Card, Text, TextArea } from '@superapp/ui';
 
 interface DiaryEntryFormProps {
   onSuccess?: () => void;
@@ -35,11 +36,11 @@ export function DiaryEntryForm({ onSuccess }: DiaryEntryFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
-      <h3>Новая запись</h3>
+    <Card padding="2xl" style={{ marginBottom: 24 }}>
+      <Text fontWeight={600} size="lg" style={{ marginBottom: 16 }}>Новая запись</Text>
 
       <div style={{ marginBottom: 12 }}>
-        <label style={{ display: 'block', marginBottom: 4, fontSize: 14, color: '#888' }}>Настроение</label>
+        <Text muted size="sm" style={{ display: 'block', marginBottom: 8 }}>Настроение</Text>
         <div style={{ display: 'flex', gap: 8 }}>
           {moodEmojis.map((emoji, i) => (
             <button
@@ -61,43 +62,29 @@ export function DiaryEntryForm({ onSuccess }: DiaryEntryFormProps) {
         </div>
       </div>
 
-      <textarea
+      <TextArea
         placeholder="Что произошло сегодня?"
         value={content}
         onChange={(e) => setContent(e.target.value)}
         rows={4}
-        required
-        style={{
-          width: '100%',
-          padding: 12,
-          borderRadius: 8,
-          border: '1px solid #333',
-          background: '#111827',
-          color: '#F4F7FF',
-          fontSize: 15,
-          resize: 'vertical',
-          boxSizing: 'border-box',
-        }}
+        fullWidth
       />
 
-      {error && <p style={{ color: '#ff6b6b', marginTop: 8 }}>{error}</p>}
+      {error && (
+        <Text error style={{ marginTop: 12 }}>{error}</Text>
+      )}
 
-      <button
+      <Button
         type="submit"
-        disabled={loading || !content.trim()}
-        style={{
-          marginTop: 12,
-          padding: '10px 24px',
-          borderRadius: 8,
-          border: 'none',
-          background: content.trim() ? '#5B6CFF' : '#333',
-          color: '#fff',
-          cursor: loading || !content.trim() ? 'not-allowed' : 'pointer',
-          fontWeight: 600,
-        }}
+        loading={loading}
+        disabled={!content.trim()}
+        style={{ marginTop: 12 }}
+        fullWidth
+        size="lg"
+        onClick={handleSubmit}
       >
         {loading ? 'Сохранение...' : 'Сохранить'}
-      </button>
-    </form>
+      </Button>
+    </Card>
   );
 }

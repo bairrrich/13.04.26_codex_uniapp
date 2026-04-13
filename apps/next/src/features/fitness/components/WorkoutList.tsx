@@ -2,6 +2,7 @@
 
 import { fitnessService } from '../services/fitnessService';
 import type { WorkoutSession } from '../services/fitnessService';
+import { Card, Text, Badge, Button } from '@superapp/ui';
 
 interface WorkoutListProps {
   workouts: WorkoutSession[];
@@ -41,29 +42,25 @@ export function WorkoutList({ workouts, loading, onRefresh }: WorkoutListProps) 
   };
 
   if (loading) {
-    return <div style={{ padding: 24, textAlign: 'center' }}>Загрузка...</div>;
+    return (
+      <Card padding="xl">
+        <Text muted textAlign="center">Загрузка...</Text>
+      </Card>
+    );
   }
 
   if (workouts.length === 0) {
     return (
-      <div style={{ padding: 24, textAlign: 'center', color: '#888' }}>
-        <p>Тренировок пока нет. Начните первую!</p>
-      </div>
+      <Card padding="xl">
+        <Text muted textAlign="center">Тренировок пока нет. Начните первую!</Text>
+      </Card>
     );
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {workouts.map((workout) => (
-        <div
-          key={workout.id}
-          style={{
-            padding: 16,
-            borderRadius: 10,
-            border: '1px solid #333',
-            background: '#111827',
-          }}
-        >
+        <Card key={workout.id} padding="md">
           <div
             style={{
               display: 'flex',
@@ -73,32 +70,26 @@ export function WorkoutList({ workouts, loading, onRefresh }: WorkoutListProps) 
             }}
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontSize: 13, color: '#888' }}>{formatDate(workout.started_at)}</span>
-              <span style={{ fontSize: 13, color: '#5B6CFF' }}>
+              <Text muted size="sm">{formatDate(workout.started_at)}</Text>
+              <Badge variant="primary" size="sm">
                 {formatDuration(workout.started_at, workout.ended_at)}
-              </span>
+              </Badge>
             </div>
-            <button
-              onClick={() => handleDelete(workout.id)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#ff6b6b',
-                cursor: 'pointer',
-                fontSize: 18,
-                padding: '4px 8px',
-              }}
-              title="Удалить"
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={() => handleDelete(workout.id)}
+              style={{ color: '#ff6b6b', padding: '4px 8px' }}
             >
-              ✕
-            </button>
+              Удалить
+            </Button>
           </div>
           {workout.notes && (
-            <p style={{ margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.6, color: '#ccc' }}>
+            <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
               {workout.notes}
-            </p>
+            </Text>
           )}
-        </div>
+        </Card>
       ))}
     </div>
   );

@@ -1,18 +1,19 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { Button, Input, Select, Card, Text, type SelectOption } from '@superapp/ui';
 import { collectionsService } from '../services/collectionsService';
 
 interface CollectionFormProps {
   onSuccess?: () => void;
 }
 
-const typeOptions = [
+const typeOptions: SelectOption[] = [
   { value: 'book', label: '📚 Книга' },
   { value: 'movie', label: '🎬 Фильм' },
   { value: 'recipe', label: '🍳 Рецепт' },
   { value: 'supplement', label: '💊 Добавка' },
-] as const;
+];
 
 export function CollectionForm({ onSuccess }: CollectionFormProps) {
   const [type, setType] = useState<'book' | 'movie' | 'recipe' | 'supplement'>('book');
@@ -34,54 +35,32 @@ export function CollectionForm({ onSuccess }: CollectionFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-      <select
-        value={type}
-        onChange={(e) => setType(e.target.value as typeof type)}
-        style={{
-          padding: '8px 12px',
-          borderRadius: 6,
-          border: '1px solid #333',
-          background: '#1a1a2e',
-          color: '#F4F7FF',
-        }}
-      >
-        {typeOptions.map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
+    <Card padding="md" style={{ marginBottom: 20 }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <Select
+          options={typeOptions}
+          value={type}
+          onChange={(e) => setType(e.target.value as typeof type)}
+          style={{ minWidth: 160 }}
+        />
 
-      <input
-        type="text"
-        placeholder="Название..."
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        style={{
-          flex: 1,
-          minWidth: 200,
-          padding: '8px 12px',
-          borderRadius: 6,
-          border: '1px solid #333',
-          background: '#111827',
-          color: '#F4F7FF',
-        }}
-      />
+        <Input
+          type="text"
+          placeholder="Название..."
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          fullWidth
+        />
 
-      <button
-        type="submit"
-        disabled={loading || !title.trim()}
-        style={{
-          padding: '8px 20px',
-          borderRadius: 6,
-          border: 'none',
-          background: title.trim() ? '#5B6CFF' : '#333',
-          color: '#fff',
-          cursor: loading || !title.trim() ? 'not-allowed' : 'pointer',
-          fontWeight: 600,
-        }}
-      >
-        {loading ? '...' : 'Добавить'}
-      </button>
-    </form>
+        <Button
+          type="submit"
+          variant="primary"
+          loading={loading}
+          disabled={!title.trim()}
+        >
+          Добавить
+        </Button>
+      </form>
+    </Card>
   );
 }

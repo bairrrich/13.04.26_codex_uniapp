@@ -11,6 +11,7 @@ import {
   type Account,
   type Category,
 } from '../../src/features/finance/services/financeService';
+import { Heading, Card, Text } from '@superapp/ui';
 
 export default function FinancePage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -44,22 +45,22 @@ export default function FinancePage() {
 
   return (
     <main style={{ maxWidth: 720, margin: '0 auto', padding: 24 }}>
-      <h1>💰 Финансы</h1>
+      <Heading style={{ marginBottom: 24 }}>💰 Финансы</Heading>
 
       {accounts.length > 0 && categories.length > 0 ? (
         <TransactionForm accounts={accounts} categories={categories} onSuccess={fetchData} />
       ) : (
-        <div style={{ padding: 16, borderRadius: 8, background: '#1a1a2e', border: '1px solid #5B6CFF', marginBottom: 16 }}>
-          <p style={{ color: '#aaa', margin: 0 }}>
+        <Card padding="lg" style={{ marginBottom: 16, borderColor: '#5B6CFF' }}>
+          <Text muted>
             Для создания транзакций необходимы хотя бы один счёт и одна категория.
-          </p>
-        </div>
+          </Text>
+        </Card>
       )}
 
       {error && (
-        <div style={{ padding: 16, borderRadius: 8, background: '#2d1215', border: '1px solid #ff6b6b', marginBottom: 16 }}>
-          <p style={{ color: '#ff6b6b', margin: 0 }}>{error}</p>
-        </div>
+        <Card padding="lg" style={{ marginBottom: 16, borderColor: '#ff6b6b' }}>
+          <Text error>{error}</Text>
+        </Card>
       )}
 
       <TransactionList

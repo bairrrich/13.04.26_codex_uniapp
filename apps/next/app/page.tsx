@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { AuthForm } from '../src/components/AuthForm';
 import { supabase } from '../src/lib/supabase';
 import type { Session } from '@supabase/supabase-js';
+import { Card, Text, Heading } from '@superapp/ui';
 
 const modules = [
   { name: 'Дневник', icon: '📔', path: '/diary', desc: 'Записи, настроение, теги' },
@@ -19,13 +20,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
@@ -34,14 +33,20 @@ export default function HomePage() {
   }, []);
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center' }}>Загрузка...</div>;
+    return (
+      <div style={{ padding: 24, textAlign: 'center' }}>
+        <Text muted>Загрузка...</Text>
+      </div>
+    );
   }
 
   if (!session) {
     return (
       <main style={{ padding: 24 }}>
-        <h1 style={{ textAlign: 'center' }}>SuperApp</h1>
-        <p style={{ textAlign: 'center', color: '#888' }}>Life Management OS — войдите или зарегистрируйтесь</p>
+        <Heading textAlign="center" style={{ marginBottom: 8 }}>SuperApp</Heading>
+        <Text textAlign="center" muted style={{ marginBottom: 24 }}>
+          Life Management OS — войдите или зарегистрируйтесь
+        </Text>
         <AuthForm />
       </main>
     );
@@ -51,40 +56,34 @@ export default function HomePage() {
 
   return (
     <main style={{ padding: 24 }}>
-      <h1>Добро пожаловать, {email}</h1>
-      <p style={{ color: '#888' }}>Выберите модуль:</p>
+      <Heading style={{ marginBottom: 8 }}>Добро пожаловать, {email}</Heading>
+      <Text muted style={{ marginBottom: 24 }}>Выберите модуль:</Text>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16, marginTop: 24 }}>
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 16,
+      }}>
         {modules.map((mod) => (
           <a
             key={mod.name}
             href={mod.path}
-            style={{ textDecoration: 'none', color: 'inherit' }}
+            style={{ textDecoration: 'none', flex: '0 0 280px', color: 'inherit' }}
           >
-            <div
+            <Card
+              padding="lg"
               style={{
-                padding: 20,
-                border: '1px solid #333',
-                borderRadius: 12,
-                background: '#111827',
                 cursor: 'pointer',
                 transition: 'transform 0.15s, border-color 0.15s',
                 height: '100%',
               }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                (e.currentTarget as HTMLElement).style.borderColor = '#5B6CFF';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.transform = '';
-                (e.currentTarget as HTMLElement).style.borderColor = '#333';
-              }}
+              className="module-card"
             >
               <div style={{ fontSize: 32, marginBottom: 8 }}>{mod.icon}</div>
-              <h3 style={{ margin: '0 0 4px' }}>{mod.name}</h3>
-              <p style={{ margin: 0, fontSize: 14, color: '#888' }}>{mod.desc}</p>
-              <p style={{ margin: '8px 0 0', fontSize: 12, color: '#5B6CFF' }}>{mod.path}</p>
-            </div>
+              <Text fontWeight={600} size="lg">{mod.name}</Text>
+              <Text muted size="sm">{mod.desc}</Text>
+              <Text size="sm" style={{ color: '#5B6CFF', marginTop: 8 }}>{mod.path}</Text>
+            </Card>
           </a>
         ))}
       </div>

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { transactionService, categoryService, accountService, type Account, type Category } from '../services/financeService';
+import { Button, Card, Input, Select, Text } from '@superapp/ui';
 
 interface TransactionFormProps {
   accounts: Account[];
@@ -47,11 +48,11 @@ export function TransactionForm({ accounts, categories, onSuccess }: Transaction
   const filteredCategories = categories.filter((c) => c.kind === kind);
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
-      <h3>Новая транзакция</h3>
+    <Card padding="2xl" style={{ marginBottom: 24 }}>
+      <Text fontWeight={600} size="lg" style={{ marginBottom: 16 }}>Новая транзакция</Text>
 
       <div style={{ marginBottom: 12 }}>
-        <label style={{ display: 'block', marginBottom: 4, fontSize: 14, color: '#888' }}>Тип</label>
+        <Text muted size="sm" style={{ display: 'block', marginBottom: 8 }}>Тип</Text>
         <div style={{ display: 'flex', gap: 8 }}>
           {(['expense', 'income'] as const).map((k) => (
             <button
@@ -75,111 +76,64 @@ export function TransactionForm({ accounts, categories, onSuccess }: Transaction
         </div>
       </div>
 
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ display: 'block', marginBottom: 4, fontSize: 14, color: '#888' }}>Счёт</label>
-        <select
-          value={accountId}
-          onChange={(e) => setAccountId(e.target.value)}
-          required
-          style={{
-            width: '100%',
-            padding: 12,
-            borderRadius: 8,
-            border: '1px solid #333',
-            background: '#111827',
-            color: '#F4F7FF',
-            fontSize: 15,
-            boxSizing: 'border-box',
-          }}
-        >
-          {accounts.map((acc) => (
-            <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency_code})</option>
-          ))}
-        </select>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 12 }}>
+        <div>
+          <Text muted size="sm" style={{ display: 'block', marginBottom: 4 }}>Счёт</Text>
+          <Select
+            options={accounts.map((acc) => ({ value: acc.id, label: `${acc.name} (${acc.currency_code})` }))}
+            value={accountId}
+            onChange={(e) => setAccountId(e.target.value)}
+            fullWidth
+          />
+        </div>
+
+        <div>
+          <Text muted size="sm" style={{ display: 'block', marginBottom: 4 }}>Категория</Text>
+          <Select
+            options={[
+              { value: '', label: 'Без категории' },
+              ...filteredCategories.map((cat) => ({ value: cat.id, label: cat.name })),
+            ]}
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            fullWidth
+          />
+        </div>
+
+        <div>
+          <Text muted size="sm" style={{ display: 'block', marginBottom: 4 }}>Сумма (в минорных единицах)</Text>
+          <Input
+            type="number"
+            placeholder="1000"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            fullWidth
+          />
+        </div>
+
+        <div>
+          <Text muted size="sm" style={{ display: 'block', marginBottom: 4 }}>Дата</Text>
+          <Input
+            type="datetime-local"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            fullWidth
+          />
+        </div>
       </div>
 
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ display: 'block', marginBottom: 4, fontSize: 14, color: '#888' }}>Категория</label>
-        <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          style={{
-            width: '100%',
-            padding: 12,
-            borderRadius: 8,
-            border: '1px solid #333',
-            background: '#111827',
-            color: '#F4F7FF',
-            fontSize: 15,
-            boxSizing: 'border-box',
-          }}
-        >
-          <option value="">Без категории</option>
-          {filteredCategories.map((cat) => (
-            <option key={cat.id} value={cat.id}>{cat.name}</option>
-          ))}
-        </select>
-      </div>
+      {error && <Text error style={{ marginBottom: 12 }}>{error}</Text>}
 
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ display: 'block', marginBottom: 4, fontSize: 14, color: '#888' }}>Сумма (в минорных единицах)</label>
-        <input
-          type="number"
-          placeholder="1000"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          min="1"
-          required
-          style={{
-            width: '100%',
-            padding: 12,
-            borderRadius: 8,
-            border: '1px solid #333',
-            background: '#111827',
-            color: '#F4F7FF',
-            fontSize: 15,
-            boxSizing: 'border-box',
-          }}
-        />
-      </div>
-
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ display: 'block', marginBottom: 4, fontSize: 14, color: '#888' }}>Дата</label>
-        <input
-          type="datetime-local"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          style={{
-            width: '100%',
-            padding: 12,
-            borderRadius: 8,
-            border: '1px solid #333',
-            background: '#111827',
-            color: '#F4F7FF',
-            fontSize: 15,
-            boxSizing: 'border-box',
-          }}
-        />
-      </div>
-
-      {error && <p style={{ color: '#ff6b6b', marginTop: 8 }}>{error}</p>}
-
-      <button
+      <Button
         type="submit"
-        disabled={loading || !amount || parseInt(amount, 10) <= 0}
-        style={{
-          marginTop: 12,
-          padding: '10px 24px',
-          borderRadius: 8,
-          border: 'none',
-          background: amount && parseInt(amount, 10) > 0 ? '#5B6CFF' : '#333',
-          color: '#fff',
-          cursor: loading || !amount || parseInt(amount, 10) <= 0 ? 'not-allowed' : 'pointer',
-          fontWeight: 600,
-        }}
+        loading={loading}
+        disabled={!amount || parseInt(amount, 10) <= 0}
+        fullWidth
+        size="lg"
+        onClick={handleSubmit}
       >
         {loading ? 'Сохранение...' : 'Сохранить'}
-      </button>
-    </form>
+      </Button>
+    </Card>
   );
 }
