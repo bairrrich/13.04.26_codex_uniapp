@@ -44,3 +44,6 @@ export type { AppHeaderProps } from './components/AppHeader';
 
 export { AppFooter } from './components/AppFooter';
 export type { AppFooterProps } from './components/AppFooter';
+
+export { Modal } from './components/Modal';
+export type { ModalProps } from './components/Modal';

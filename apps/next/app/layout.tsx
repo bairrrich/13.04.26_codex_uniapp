@@ -30,6 +30,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             from { opacity: 0; transform: translateX(-12px); }
             to { opacity: 1; transform: translateX(0); }
           }
+          @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+          }
           * {
             scrollbar-width: thin;
             scrollbar-color: #334155 #111827;

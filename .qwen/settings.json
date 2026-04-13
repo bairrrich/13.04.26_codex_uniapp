@@ -9,7 +9,10 @@
       "Bash(del *)",
       "Bash(@powershell *)",
       "Bash(findstr *)",
-      "Bash(move *)"
+      "Bash(move *)",
+      "Bash(rmdir *)",
+      "Bash(node *)",
+      "Bash(powershell *)"
     ]
   },
   "$version": 3

@@ -1,154 +1,65 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Heading, Card, Text, Badge, SkeletonCard, tokens } from '@superapp/ui';
-import { FeedPostForm } from '../../src/features/feed/components/FeedPostForm';
-import { FeedList } from '../../src/features/feed/components/FeedList';
-import { feedService, type FeedPost, type ActivityEvent } from '../../src/features/feed/services/feedService';
+import { useState, useEffect } from 'react';
 import { AppLayout } from '../../src/components/AppLayout';
+import { Card, Text, Skeleton, Button } from '@superapp/ui';
+import { tokens } from '@superapp/ui';
 
-interface FeedStats {
-  totalPosts: number;
-  totalEvents: number;
-}
-
-function StatsSkeleton() {
-  return (
-    <Card padding="lg">
-      <div style={{ display: 'flex', gap: tokens.space.lg, justifyContent: 'space-around' }}>
-        <div style={{ textAlign: 'center' }}>
-          <SkeletonCard lines={1} />
-          <div style={{ marginTop: tokens.space.sm }}>
-            <SkeletonCard lines={1} />
-          </div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <SkeletonCard lines={1} />
-          <div style={{ marginTop: tokens.space.sm }}>
-            <SkeletonCard lines={1} />
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
-}
-
-function StatsHeader({ stats, loading }: { stats: FeedStats | null; loading: boolean }) {
-  if (loading) {
-    return <StatsSkeleton />;
-  }
-
-  if (!stats) return null;
-
-  return (
-    <Card padding="lg" style={{ marginBottom: tokens.space.lg }}>
-      <div style={{ display: 'flex', gap: tokens.space['2xl'], justifyContent: 'space-around' }}>
-        <div style={{ textAlign: 'center' }}>
-          <Heading level={2} style={{ margin: 0, fontSize: tokens.fontSizes['2xl'] }}>
-            {stats.totalPosts}
-          </Heading>
-          <Text muted size="sm" style={{ marginTop: tokens.space.xs }}>
-            Постов
-          </Text>
-        </div>
-        <div style={{ width: 1, background: tokens.colors.border }} />
-        <div style={{ textAlign: 'center' }}>
-          <Heading level={2} style={{ margin: 0, fontSize: tokens.fontSizes['2xl'] }}>
-            {stats.totalEvents}
-          </Heading>
-          <Text muted size="sm" style={{ marginTop: tokens.space.xs }}>
-            Событий
-          </Text>
-        </div>
-      </div>
-    </Card>
-  );
-}
+const moduleTabs = [
+  { label: 'Посты', href: '/feed' },
+  { label: 'Активность', href: '/feed/activity' },
+  { label: 'Комментарии', href: '/feed/comments' },
+];
 
 export default function FeedPage() {
-  const [posts, setPosts] = useState<FeedPost[]>([]);
-  const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [stats, setStats] = useState<FeedStats | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const [postsResult, eventsResult] = await Promise.all([
-        feedService.list({ page: 1, limit: 50 }),
-        feedService.listEvents({ page: 1, limit: 50 }),
-      ]);
-      setPosts(postsResult.data);
-      setEvents(eventsResult.data);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Ошибка загрузки ленты';
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchStats = useCallback(async () => {
-    try {
-      setStatsLoading(true);
-      const result = await feedService.getStats();
-      setStats({
-        totalPosts: result.totalPosts,
-        totalEvents: result.totalEvents,
-      });
-    } catch {
-      // silently ignore stats errors
-    } finally {
-      setStatsLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
-    fetchData();
-    fetchStats();
-  }, [fetchData, fetchStats]);
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <AppLayout headerTitle="Лента" headerSubtitle="Посты и события">
-      <div style={{ maxWidth: 720, margin: '0 auto' }}>
-        {error && (
-          <Card padding="md" style={{ marginBottom: tokens.space.lg, borderColor: tokens.colors.error }}>
-            <Text style={{ color: tokens.colors.error }}>{error}</Text>
-          </Card>
-        )}
-
-        <StatsHeader stats={stats} loading={statsLoading} />
-
-        <section style={{ marginBottom: tokens.space.xl }}>
-          <FeedPostForm onSuccess={() => {
-            fetchData();
-            fetchStats();
-          }} />
-        </section>
-
-        <section>
-          {loading ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: tokens.space.md }}>
-              <SkeletonCard lines={2} />
-              <SkeletonCard lines={3} />
-              <SkeletonCard lines={2} />
-            </div>
-          ) : (
-            <FeedList
-              posts={posts}
-              events={events}
-              loading={loading}
-              onRefresh={() => {
-                fetchData();
-                fetchStats();
-              }}
-            />
-          )}
-        </section>
+    <AppLayout
+      headerTitle="Лента"
+      headerSubtitle="Посты и события активности"
+      headerRight={
+        <Button variant="primary" size="sm">+ Новый пост</Button>
+      }
+    >
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, overflowX: 'auto', paddingBottom: 8 }}>
+        {moduleTabs.map((tab) => (
+          <a key={tab.href} href={tab.href} style={{ textDecoration: 'none' }}>
+            <Button variant={tab.href === '/feed' ? 'primary' : 'ghost'} size="sm">{tab.label}</Button>
+          </a>
+        ))}
       </div>
+
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {[1, 2, 3].map((i) => (
+            <Card key={i} padding="lg">
+              <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                <Skeleton variant="circular" width={36} height={36} />
+                <div style={{ flex: 1 }}>
+                  <Skeleton width="30%" height={14} style={{ marginBottom: 4 }} />
+                  <Skeleton width="20%" height={12} />
+                </div>
+              </div>
+              <Skeleton width="100%" height={12} style={{ marginBottom: 8 }} />
+              <Skeleton width="80%" height={12} />
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card padding="2xl" variant="outlined">
+          <div style={{ textAlign: 'center', padding: 24 }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>📰</div>
+            <Text muted size="xl" style={{ marginBottom: 8 }}>Лента пуста</Text>
+            <Text muted>Создайте первый пост или дождитесь событий из других модулей</Text>
+          </div>
+        </Card>
+      )}
     </AppLayout>
   );
 }
