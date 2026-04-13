@@ -4,7 +4,8 @@
       "Bash(pnpm install)",
       "Bash(pnpm *)",
       "Bash(taskkill *)",
-      "Bash(npx *)"
+      "Bash(npx *)",
+      "Bash(mkdir *)"
     ]
   },
   "$version": 3

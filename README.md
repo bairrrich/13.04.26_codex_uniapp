@@ -1,19 +1,24 @@
-# SuperApp (Life Management OS): целевая архитектура и план внедрения
+# SuperApp (Life Management OS)
 
-## 0) Быстрый старт: Supabase + Vercel
+## 0) Быстрый старт
 
-- Supabase project URL: `https://toxqvyaqrgcgkdsmkeqd.supabase.co`.
-- Для Web-клиента env переменные лежат в `apps/next/.env.example`.
-- Базовая SQL-миграция: `packages/db/sql/001_init.sql`.
-- Для деплоя на Vercel импортируйте GitHub-репозиторий; root `npm run build` уже направлен на `apps/next`, а зависимости ставятся отдельно для `apps/next` через Vercel install command.
+```bash
+pnpm install
+pnpm dev          # http://localhost:3000
+pnpm build        # production build
+```
 
-> Документ обновлён как **практический blueprint**: не только «что строим», но и **как внедрить по этапам** в реальном проекте.
+- Supabase project URL: `https://toxqvyaqrgcgkdsmkeqd.supabase.co`
+- Env переменные: `apps/next/.env.example`
+- Деплой: Vercel (Root Directory = `apps/next`)
 
-## Status (Implementation Kickoff)
+## Status (All Core Modules Implemented ✅)
 
-- ✅ Iteration A started: создан базовый каркас Turborepo (`apps/*`, `packages/*`).
-- ✅ Добавлены workspace-конфиги: `pnpm-workspace.yaml`, `turbo.json`, `tsconfig.base.json`.
-- ✅ Инициализированы пакеты `@superapp/app`, `@superapp/ui`, `@superapp/api`, `@superapp/db`, `@superapp/config`.
+- ✅ **Iteration A** — Foundation: Turborepo, pnpm workspaces, TypeScript
+- ✅ **Iteration B** — Data & Auth: Drizzle ORM schema, Supabase Auth, ErrorBoundary, Logger
+- ✅ **Iteration C** — Core Features: Diary, Finance, Nutrition, Fitness (full CRUD)
+- ✅ **Iteration D** — Feed + Social + Collections: Activity Feed, Collections (books/movies/recipes/supplements)
+- ⬜ **Iteration E** — Reliability: Background jobs, tests, SLA
 
 ## 1) Цели и нефункциональные требования
 
@@ -194,11 +199,11 @@ Feed читает только этот контракт и не зависит 
 
 ## 9) Технические решения по умолчанию
 
-- API: `tRPC + zod` (или REST + OpenAPI, если нужны внешние интеграции).
-- ORM: `Prisma` (быстрый старт) или `Drizzle` (больше контроля SQL).
-- Client state: `TanStack Query + Zustand`.
-- Очереди/джобы: `BullMQ`/`pg-boss`.
-- Observability: `OpenTelemetry + Sentry`.
+- API: Supabase Client (direct)
+- ORM: `Drizzle ORM` (для серверных операций и миграций)
+- Client state: React useState/useEffect
+- Очереди/джобы: `BullMQ`/`pg-boss` (Iteration E).
+- Observability: встроенный logger + Sentry (подключается через env).
 
 ## 10) Definition of Done для модуля
 
@@ -210,3 +215,46 @@ Feed читает только этот контракт и не зависит 
 - Контракт API задокументирован и покрыт тестом.
 - События модуля публикуются в `activity_events`.
 - UI соответствует дизайн-системе и поддерживает loading/empty/error состояния.
+
+## 11) Реализованные модули (Status: Iteration D Complete)
+
+### 📔 Diary (Дневник)
+- CRUD записей с настроением (1-5 эмодзи)
+- Теги и медиа (schema ready)
+- Страница: `/diary`
+
+### 💰 Finance (Финансы)
+- Счета, транзакции, категории
+- Доходы/расходы с суммами
+- Страница: `/finance`
+
+### 🍽️ Nutrition (Питание)
+- Журнал приёмов пищи (завтрак/обед/ужин/перекус)
+- Лог воды (ml)
+- Страница: `/nutrition`
+
+### 🏋️ Fitness (Фитнес)
+- Тренировки с упражнениями
+- Подходы, вес, отдых
+- Страница: `/fitness`
+
+### 📚 Collections (Коллекции)
+- Книги, фильмы, рецепты, добавки
+- Статусы и рейтинг (1-5 звёзд)
+- Страница: `/collections`
+
+### 📰 Feed (Лента)
+- Посты и события активности
+- Видимость (private/public)
+- Страница: `/feed`
+
+### 🔐 Auth
+- Supabase Auth (email/password, sign up/sign in)
+- User profile с timezone/locale
+- Компоненты: `AuthForm`, `UserProfile`
+
+### 🛡️ Infrastructure
+- ErrorBoundary для обработки ошибок
+- Logger с контекстом (error/warn/info/debug)
+- Not-found page
+- Drizzle ORM schema для всех таблиц
