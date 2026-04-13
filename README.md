@@ -5,10 +5,7 @@
 - Supabase project URL: `https://toxqvyaqrgcgkdsmkeqd.supabase.co`.
 - Для Web-клиента env переменные лежат в `apps/next/.env.example`.
 - Базовая SQL-миграция: `packages/db/sql/001_init.sql`.
-
-
-- Для деплоя на Vercel импортируйте GitHub-репозиторий и задайте Root Directory = `apps/next`. main
-
+- Для деплоя на Vercel импортируйте GitHub-репозиторий; root `npm run build` уже направлен на `apps/next`, а зависимости ставятся через npm workspaces.
 
 > Документ обновлён как **практический blueprint**: не только «что строим», но и **как внедрить по этапам** в реальном проекте.
 
