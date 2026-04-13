@@ -52,17 +52,46 @@ export interface CreateWorkoutSetInput {
   set_order: number;
 }
 
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
+
+export interface WorkoutStatistics {
+  totalSessions: number;
+  totalDurationMinutes: number;
+}
+
 export const fitnessService = {
   // WorkoutSessions
-  async list(limit = 50): Promise<WorkoutSession[]> {
-    const { data, error } = await supabase
+  async list(
+    params: PaginationParams = {},
+  ): Promise<PaginatedResult<WorkoutSession>> {
+    const { page = 1, limit = 50 } = params;
+    const offset = (page - 1) * limit;
+
+    const { data, error, count } = await supabase
       .from('workout_sessions')
-      .select('*')
+      .select('*', { count: 'exact' })
       .order('started_at', { ascending: false })
-      .limit(limit);
+      .range(offset, offset + limit - 1);
 
     if (error) throw error;
-    return data || [];
+    return {
+      data: data || [],
+      total: count ?? 0,
+      page,
+      limit,
+      hasMore: (count ?? 0) > offset + (data?.length ?? 0),
+    };
   },
 
   async get(id: string): Promise<WorkoutSession | null> {
@@ -117,15 +146,57 @@ export const fitnessService = {
     if (error) throw error;
   },
 
-  // ExerciseDefinitions
-  async listExercises(): Promise<ExerciseDefinition[]> {
+  async getStatistics(): Promise<WorkoutStatistics> {
+    const { data: sessions, error } = await supabase
+      .from('workout_sessions')
+      .select('started_at, ended_at');
+
+    if (error) throw error;
+
+    const totalSessions = sessions?.length ?? 0;
+    let totalDurationMinutes = 0;
+
+    for (const session of sessions ?? []) {
+      if (session.ended_at) {
+        const start = new Date(session.started_at).getTime();
+        const end = new Date(session.ended_at).getTime();
+        totalDurationMinutes += Math.round((end - start) / 60000);
+      }
+    }
+
+    return { totalSessions, totalDurationMinutes };
+  },
+
+  async getRecentWorkouts(limit = 10): Promise<WorkoutSession[]> {
     const { data, error } = await supabase
-      .from('exercise_definitions')
+      .from('workout_sessions')
       .select('*')
-      .order('name');
+      .order('started_at', { ascending: false })
+      .limit(limit);
 
     if (error) throw error;
     return data || [];
+  },
+
+  // ExerciseDefinitions
+  async listExercises(params: PaginationParams = {}): Promise<PaginatedResult<ExerciseDefinition>> {
+    const { page = 1, limit = 100 } = params;
+    const offset = (page - 1) * limit;
+
+    const { data, error, count } = await supabase
+      .from('exercise_definitions')
+      .select('*', { count: 'exact' })
+      .order('name')
+      .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+    return {
+      data: data || [],
+      total: count ?? 0,
+      page,
+      limit,
+      hasMore: (count ?? 0) > offset + (data?.length ?? 0),
+    };
   },
 
   async createExercise(input: CreateExerciseDefinitionInput): Promise<ExerciseDefinition> {

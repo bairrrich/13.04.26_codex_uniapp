@@ -5,7 +5,8 @@ import { MealList } from '../../src/features/nutrition/components/MealList';
 import { MealForm } from '../../src/features/nutrition/components/MealForm';
 import { WaterForm } from '../../src/features/nutrition/components/WaterForm';
 import { mealLogService, type MealLog } from '../../src/features/nutrition/services/nutritionService';
-import { Heading, Card, Text } from '@superapp/ui';
+import { Heading, Card, Text, Skeleton, SkeletonCard, tokens } from '@superapp/ui';
+import { AppLayout } from '../../src/components/AppLayout';
 
 export default function NutritionPage() {
   const [meals, setMeals] = useState<MealLog[]>([]);
@@ -16,8 +17,8 @@ export default function NutritionPage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await mealLogService.list();
-      setMeals(data);
+      const result = await mealLogService.list({ page: 1, limit: 20 });
+      setMeals(result.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка загрузки');
     } finally {
@@ -30,19 +31,42 @@ export default function NutritionPage() {
   }, [fetchMeals]);
 
   return (
-    <main style={{ maxWidth: 720, margin: '0 auto', padding: 24 }}>
-      <Heading style={{ marginBottom: 24 }}>🍽️ Питание</Heading>
+    <AppLayout headerTitle="Питание" headerSubtitle="Трекинг приёмов пищи и воды">
+      <div style={{ maxWidth: 720, margin: '0 auto' }}>
+        {/* Water Section */}
+        <section style={{ marginBottom: 32 }}>
+          <WaterForm onSuccess={fetchMeals} />
+        </section>
 
-      <WaterForm onSuccess={fetchMeals} />
-      <MealForm onSuccess={fetchMeals} />
+        {/* Meal Form Section */}
+        <section style={{ marginBottom: 32 }}>
+          <MealForm onSuccess={fetchMeals} />
+        </section>
 
-      {error && (
-        <Card padding="lg" style={{ marginBottom: 16, borderColor: '#ff6b6b' }}>
-          <Text error>{error}</Text>
-        </Card>
-      )}
+        {/* Error State */}
+        {error && (
+          <Card padding="lg" style={{ marginBottom: 16, borderColor: tokens.colors.error }}>
+            <Text error>{error}</Text>
+          </Card>
+        )}
 
-      <MealList meals={meals} loading={loading} onRefresh={fetchMeals} />
-    </main>
+        {/* Meal List Section */}
+        <section>
+          <Heading level={2} style={{ marginBottom: 16 }}>
+            История приёмов пищи
+          </Heading>
+
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <Skeleton height={120} />
+              <Skeleton height={100} />
+              <Skeleton height={140} />
+            </div>
+          ) : (
+            <MealList meals={meals} loading={loading} onRefresh={fetchMeals} />
+          )}
+        </section>
+      </div>
+    </AppLayout>
   );
 }

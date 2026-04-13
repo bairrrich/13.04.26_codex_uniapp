@@ -35,3 +35,12 @@ export type { AvatarProps } from './components/Avatar';
 
 export { Divider } from './components/Divider';
 export type { DividerProps } from './components/Divider';
+
+export { Sidebar, SidebarSection, SidebarItem, SidebarFooter } from './components/Sidebar';
+export type { SidebarProps, SidebarSectionProps, SidebarItemProps, SidebarFooterProps } from './components/Sidebar';
+
+export { AppHeader } from './components/AppHeader';
+export type { AppHeaderProps } from './components/AppHeader';
+
+export { AppFooter } from './components/AppFooter';
+export type { AppFooterProps } from './components/AppFooter';

@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react';
-import { UserProfile } from '../src/components/UserProfile';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
-import { Header } from '../src/components/Header';
 
 export const metadata = {
   title: 'SuperApp',
@@ -65,8 +63,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body style={{ margin: 0, fontFamily: 'Inter, system-ui, -apple-system, sans-serif', background: '#0B1020', color: '#F4F7FF' }}>
         <ErrorBoundary>
-          <UserProfile />
-          <Header />
           {children}
         </ErrorBoundary>
       </body>

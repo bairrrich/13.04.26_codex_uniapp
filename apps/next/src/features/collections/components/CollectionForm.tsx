@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { Button, Input, Select, Card, Text, type SelectOption } from '@superapp/ui';
-import { collectionsService } from '../services/collectionsService';
+import { collectionsService, type CollectionType } from '../services/collectionsService';
 
 interface CollectionFormProps {
   onSuccess?: () => void;
@@ -15,52 +15,91 @@ const typeOptions: SelectOption[] = [
   { value: 'supplement', label: '💊 Добавка' },
 ];
 
+const typeIcons: Record<CollectionType, string> = {
+  book: '📚',
+  movie: '🎬',
+  recipe: '🍳',
+  supplement: '💊',
+};
+
 export function CollectionForm({ onSuccess }: CollectionFormProps) {
-  const [type, setType] = useState<'book' | 'movie' | 'recipe' | 'supplement'>('book');
+  const [type, setType] = useState<CollectionType>('book');
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const isValid = title.trim().length >= 2;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    setError(null);
+
+    if (!isValid) {
+      setError('Название должно содержать минимум 2 символа');
+      return;
+    }
 
     setLoading(true);
     try {
       await collectionsService.create({ type, title: title.trim() });
       setTitle('');
       onSuccess?.();
+    } catch (err) {
+      setError('Ошибка при создании записи');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Card padding="md" style={{ marginBottom: 20 }}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <Select
-          options={typeOptions}
-          value={type}
-          onChange={(e) => setType(e.target.value as typeof type)}
-          style={{ minWidth: 160 }}
-        />
+    <Card padding="lg" variant="outlined" style={{ marginBottom: 20 }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        <div style={{ minWidth: 180 }}>
+          <Text size="sm" style={{ display: 'block', marginBottom: 6 }}>
+            {typeIcons[type]} Тип
+          </Text>
+          <Select
+            options={typeOptions}
+            value={type}
+            onChange={(e) => setType(e.target.value as CollectionType)}
+            fullWidth
+          />
+        </div>
 
-        <Input
-          type="text"
-          placeholder="Название..."
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          fullWidth
-        />
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <Text size="sm" style={{ display: 'block', marginBottom: 6 }}>
+            Название
+          </Text>
+          <Input
+            type="text"
+            placeholder="Введите название..."
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (error) setError(null);
+            }}
+            fullWidth
+            error={!isValid && title.length > 0}
+            errorMessage={!isValid && title.length > 0 ? 'Минимум 2 символа' : undefined}
+          />
+        </div>
 
         <Button
           type="submit"
           variant="primary"
           loading={loading}
-          disabled={!title.trim()}
+          disabled={!isValid || loading}
+          icon={typeIcons[type]}
         >
           Добавить
         </Button>
       </form>
+
+      {error && (
+        <Text size="sm" style={{ color: '#ef4444', marginTop: 12 }}>
+          {error}
+        </Text>
+      )}
     </Card>
   );
 }

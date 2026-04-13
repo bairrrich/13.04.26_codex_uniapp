@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent, useEffect } from 'react';
 import { fitnessService, type ExerciseDefinition } from '../services/fitnessService';
-import { Card, Button, Input, Select, TextArea, Text, Heading } from '@superapp/ui';
+import { Card, Button, Input, Select, TextArea, Text, Heading, Divider } from '@superapp/ui';
 
 interface WorkoutFormProps {
   onSuccess?: () => void;
@@ -19,7 +19,7 @@ export function WorkoutForm({ onSuccess }: WorkoutFormProps) {
   const [addNewExercise, setAddNewExercise] = useState(false);
 
   useEffect(() => {
-    fitnessService.listExercises().then(setExercises).catch(() => { });
+    fitnessService.listExercises().then((res) => setExercises(res.data)).catch(() => { });
   }, []);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -60,16 +60,35 @@ export function WorkoutForm({ onSuccess }: WorkoutFormProps) {
     }
   };
 
+  const handleEndWorkout = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await fitnessService.create({
+        notes: notes.trim() || undefined,
+      });
+      setNotes('');
+      onSuccess?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка завершения');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Card>
       <Heading level={3}>Начать тренировку</Heading>
+      <Divider />
 
-      <div style={{ marginBottom: 12 }}>
-        <Text muted size="sm" style={{ display: 'block', marginBottom: 4 }}>
+      {/* Exercise selector section */}
+      <div style={{ marginBottom: 16 }}>
+        <Text muted size="sm" style={{ display: 'block', marginBottom: 8 }}>
           Упражнение
         </Text>
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
           <Button
             variant={!addNewExercise ? 'primary' : 'secondary'}
             size="sm"
@@ -115,8 +134,11 @@ export function WorkoutForm({ onSuccess }: WorkoutFormProps) {
         )}
       </div>
 
-      <div style={{ marginBottom: 12 }}>
-        <Text muted size="sm" style={{ display: 'block', marginBottom: 4 }}>
+      <Divider />
+
+      {/* Notes section */}
+      <div style={{ marginBottom: 16 }}>
+        <Text muted size="sm" style={{ display: 'block', marginBottom: 8 }}>
           Заметки
         </Text>
         <TextArea
@@ -129,21 +151,32 @@ export function WorkoutForm({ onSuccess }: WorkoutFormProps) {
       </div>
 
       {error && (
-        <Text error style={{ marginTop: 8 }}>
+        <Text error style={{ marginBottom: 12 }}>
           {error}
         </Text>
       )}
 
-      <Button
-        type="submit"
-        variant="primary"
-        loading={loading}
-        disabled={addNewExercise ? !newExerciseName.trim() : !selectedExerciseId}
-        fullWidth
-        style={{ marginTop: 12 }}
-      >
-        Начать
-      </Button>
+      {/* Action buttons */}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Button
+          type="submit"
+          variant="primary"
+          loading={loading}
+          disabled={addNewExercise ? !newExerciseName.trim() : !selectedExerciseId}
+          fullWidth
+        >
+          Начать
+        </Button>
+        <Button
+          type="button"
+          variant="success"
+          loading={loading}
+          onPress={handleEndWorkout}
+          fullWidth
+        >
+          Завершить
+        </Button>
+      </div>
     </Card>
   );
 }
