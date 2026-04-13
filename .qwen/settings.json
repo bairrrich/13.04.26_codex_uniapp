@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm *)",
+      "Bash(taskkill *)",
+      "Bash(npx *)"
+    ]
+  },
+  "$version": 3
+}
