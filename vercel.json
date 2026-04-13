@@ -1,0 +1,6 @@
+{
+  "installCommand": "npm --prefix apps/next install",
+  "buildCommand": "npm --prefix apps/next run build",
+  "framework": "nextjs",
+  "ignoreCommand": "echo 'always build'"
+}
