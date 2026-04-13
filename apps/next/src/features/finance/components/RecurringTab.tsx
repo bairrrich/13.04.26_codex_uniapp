@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { recurringService, categoryService, accountService, type RecurringRule, type Category, type Account } from '../services/financeService';
 import { Card, Text, Button, Input, Select, Badge, Modal, Skeleton } from '@superapp/ui';
 import { tokens } from '@superapp/ui';
@@ -26,7 +26,7 @@ function getFrequencyLabel(rrule: string): string {
   return opt?.label ?? rrule;
 }
 
-export function RecurringTab() {
+export function RecurringTab({ onAddReady }: { onAddReady?: (fn: () => void) => void }) {
   const [rules, setRules] = useState<RecurringRule[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -54,6 +54,8 @@ export function RecurringTab() {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => { if (onAddReady) onAddReady(() => setModalOpen(true)); }, [onAddReady]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -117,11 +119,6 @@ export function RecurringTab() {
 
   return (
     <div>
-      {/* Add button */}
-      <Button variant="primary" size="lg" onPress={() => setModalOpen(true)} style={{ marginBottom: 24 }}>
-        + Добавить повторение
-      </Button>
-
       {/* Modal */}
       <Modal isOpen={modalOpen} onClose={resetForm} title={editingId ? '✏️ Редактировать правило' : '➕ Новое повторение'} size="md">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

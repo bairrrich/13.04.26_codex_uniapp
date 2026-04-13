@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { categoryService, type Category } from '../services/financeService';
 import { Card, Text, Button, Input, Select, Badge, Modal, Skeleton, Divider } from '@superapp/ui';
 import { tokens } from '@superapp/ui';
@@ -17,7 +17,7 @@ const COLORS = [
 
 const ICONS = ['💰', '💻', '🎁', '📈', '🛒', '🚗', '🎬', '💊', '👕', '💡', '📱', '📚', '🍽️', '✈️', '🏠', '🎮', '🐾', '💇', '🔧', '📦'];
 
-export function CategoriesTab() {
+export function CategoriesTab({ onAddReady }: { onAddReady?: (fn: () => void) => void }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -36,6 +36,8 @@ export function CategoriesTab() {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => { if (onAddReady) onAddReady(() => setModalOpen(true)); }, [onAddReady]);
 
   useEffect(() => { loadCategories(); }, [loadCategories]);
 
@@ -87,11 +89,6 @@ export function CategoriesTab() {
 
   return (
     <div>
-      {/* Add button */}
-      <Button variant="primary" size="lg" onPress={() => setModalOpen(true)} style={{ marginBottom: 24 }}>
-        + Добавить категорию
-      </Button>
-
       {/* Modal */}
       <Modal isOpen={modalOpen} onClose={resetForm} title={editingId ? '✏️ Редактировать категорию' : '➕ Новая категория'} size="md">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

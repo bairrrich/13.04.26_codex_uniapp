@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   transactionService,
   transferService,
@@ -68,7 +68,7 @@ const KIND_OPTIONS = [
   { value: 'transfer', label: '🔄 Перевод' },
 ];
 
-export function TransactionsTab() {
+export function TransactionsTab({ onAddReady }: { onAddReady?: (fn: () => void) => void }) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -113,6 +113,8 @@ export function TransactionsTab() {
       setLoading(false);
     }
   }, [filters]);
+
+  useEffect(() => { if (onAddReady) onAddReady(() => setModalOpen(true)); }, [onAddReady]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -226,19 +228,6 @@ export function TransactionsTab() {
         </div>
       )}
 
-      {/* Add button */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-        <Button variant="primary" size="lg" onPress={() => { setFormAccountId(accounts[0]?.id ?? ''); setEditingTxId(null); setEditTransferId(null); setModalOpen(true); }}>
-          + Добавить операцию
-        </Button>
-        <Button variant="secondary" size="lg" onPress={() => setShowFilters(!showFilters)}>
-          🔍
-        </Button>
-        <Button variant="secondary" size="lg" onPress={() => exportToCSV(transactions, transfers, accounts, categories)}>
-          📥 Экспорт
-        </Button>
-      </div>
-
       {/* Modal */}
       <Modal isOpen={modalOpen} onClose={resetForm} title={editingTxId ? '✏️ Редактировать операцию' : '➕ Новая операция'} size="lg">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -298,6 +287,16 @@ export function TransactionsTab() {
           </div>
         </div>
       </Modal>
+
+      {/* Filters & Export */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+        <Button variant="secondary" size="lg" onPress={() => setShowFilters(!showFilters)}>
+          🔍 Фильтры
+        </Button>
+        <Button variant="secondary" size="lg" onPress={() => exportToCSV(transactions, transfers, accounts, categories)}>
+          📥 Экспорт
+        </Button>
+      </div>
 
       {/* Filters */}
       {showFilters && (

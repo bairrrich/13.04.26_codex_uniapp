@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { budgetService, categoryService, accountService, type Budget, type Category, type Account } from '../services/financeService';
 import { Card, Text, Button, Input, Select, Badge, Skeleton, Modal } from '@superapp/ui';
 import { tokens } from '@superapp/ui';
@@ -16,7 +16,7 @@ function formatCurrency(amountMinor: number): string {
   return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(amountMinor / 100);
 }
 
-export function BudgetsTab() {
+export function BudgetsTab({ onAddReady }: { onAddReady?: (fn: () => void) => void }) {
   const [budgets, setBudgets] = useState<(Budget & { category?: Category; spent: number })[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -51,6 +51,8 @@ export function BudgetsTab() {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => { if (onAddReady) onAddReady(() => setModalOpen(true)); }, [onAddReady]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -87,39 +89,33 @@ export function BudgetsTab() {
 
   return (
     <div>
-      {/* Add button / Modal */}
-      {!modalOpen ? (
-        <Button variant="primary" size="lg" onPress={() => setModalOpen(true)} style={{ marginBottom: 24 }}>
-          + Добавить бюджет
-        </Button>
-      ) : (
-        <Modal isOpen={modalOpen} onClose={resetForm} title="➕ Новый бюджет" size="md">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div>
-              <Text muted size="sm" style={{ marginBottom: 4 }}>Категория расходов</Text>
-              <Select
-                options={expenseCategories.map((c) => ({ value: c.id, label: `${c.icon ?? ''} ${c.name}`.trim() }))}
-                value={formCategoryId}
-                onChange={(e) => setFormCategoryId(e.target.value)}
-                fullWidth
-                placeholder="Выберите категорию"
-              />
-            </div>
-            <div>
-              <Text muted size="sm" style={{ marginBottom: 4 }}>Период</Text>
-              <Select options={PERIOD_OPTIONS} value={formPeriod} onChange={(e) => setFormPeriod(e.target.value as Budget['period'])} fullWidth />
-            </div>
-            <div>
-              <Text muted size="sm" style={{ marginBottom: 4 }}>Лимит (в копейках/центах)</Text>
-              <Input type="number" value={formLimit} onChange={(e) => setFormLimit(e.target.value)} placeholder="500000" fullWidth />
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <Button variant="primary" onPress={handleSave} loading={saving}>Сохранить</Button>
-              <Button variant="ghost" onPress={resetForm}>Отмена</Button>
-            </div>
+      {/* Modal */}
+      <Modal isOpen={modalOpen} onClose={resetForm} title="➕ Новый бюджет" size="md">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div>
+            <Text muted size="sm" style={{ marginBottom: 4 }}>Категория расходов</Text>
+            <Select
+              options={expenseCategories.map((c) => ({ value: c.id, label: `${c.icon ?? ''} ${c.name}`.trim() }))}
+              value={formCategoryId}
+              onChange={(e) => setFormCategoryId(e.target.value)}
+              fullWidth
+              placeholder="Выберите категорию"
+            />
           </div>
-        </Modal>
-      )}
+          <div>
+            <Text muted size="sm" style={{ marginBottom: 4 }}>Период</Text>
+            <Select options={PERIOD_OPTIONS} value={formPeriod} onChange={(e) => setFormPeriod(e.target.value as Budget['period'])} fullWidth />
+          </div>
+          <div>
+            <Text muted size="sm" style={{ marginBottom: 4 }}>Лимит (в копейках/центах)</Text>
+            <Input type="number" value={formLimit} onChange={(e) => setFormLimit(e.target.value)} placeholder="500000" fullWidth />
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <Button variant="primary" onPress={handleSave} loading={saving}>Сохранить</Button>
+            <Button variant="ghost" onPress={resetForm}>Отмена</Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Budgets list */}
       {loading ? (

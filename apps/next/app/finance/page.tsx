@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { AppLayout } from '../../src/components/AppLayout';
 import { Card, Text, Button, Badge, Skeleton, Divider } from '@superapp/ui';
 import { tokens } from '@superapp/ui';
@@ -20,6 +20,16 @@ function formatCurrency(amountMinor: number): string {
   return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(amountMinor / 100);
 }
 
+const tabActions: Record<Tab, { label: string; icon: string } | null> = {
+  'Обзор': null,
+  'Счета': { label: 'Добавить счёт', icon: '💰' },
+  'Транзакции': { label: 'Добавить операцию', icon: '💳' },
+  'Категории': { label: 'Добавить категорию', icon: '📁' },
+  'Бюджеты': { label: 'Добавить бюджет', icon: '📊' },
+  'Повторения': { label: 'Добавить повторение', icon: '🔄' },
+  'Аналитика': null,
+};
+
 export default function FinancePage() {
   const [activeTab, setActiveTab] = useState<Tab>('Обзор');
   const [loading, setLoading] = useState(true);
@@ -29,6 +39,9 @@ export default function FinancePage() {
   const [expenseMonth, setExpenseMonth] = useState(0);
   const [transactionCount, setTransactionCount] = useState(0);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+
+  // Callbacks for child tabs to trigger add modals
+  const [triggerAdd, setTriggerAdd] = useState<(() => void) | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -50,8 +63,31 @@ export default function FinancePage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // Reset trigger when tab changes
+  useEffect(() => { setTriggerAdd(null); }, [activeTab]);
+
+  const handleAddClick = () => {
+    if (triggerAdd) triggerAdd();
+  };
+
+  const handleAccountsAdd = useCallback((fn: () => void) => setTriggerAdd(() => fn), []);
+  const handleTransactionsAdd = useCallback((fn: () => void) => setTriggerAdd(() => fn), []);
+  const handleCategoriesAdd = useCallback((fn: () => void) => setTriggerAdd(() => fn), []);
+  const handleBudgetsAdd = useCallback((fn: () => void) => setTriggerAdd(() => fn), []);
+  const handleRecurringAdd = useCallback((fn: () => void) => setTriggerAdd(() => fn), []);
+
+  const actionConfig = tabActions[activeTab];
+
   return (
-    <AppLayout headerTitle="Финансы" headerSubtitle="Управление бюджетом">
+    <AppLayout
+      headerTitle="Финансы"
+      headerSubtitle="Управление бюджетом"
+      headerRight={actionConfig ? (
+        <Button variant="primary" size="sm" onPress={handleAddClick}>
+          {actionConfig.icon} {actionConfig.label}
+        </Button>
+      ) : undefined}
+    >
       {/* Tabs */}
       <div style={{ display: 'flex', gap: isMobile ? 2 : 4, marginBottom: 24, flexWrap: 'wrap', overflowX: 'auto', paddingBottom: 8 }}>
         {TABS.map((tab) => (
@@ -98,19 +134,6 @@ export default function FinancePage() {
             )}
           </div>
 
-          {/* Quick Actions */}
-          <Card padding="lg">
-            <Text fontWeight="semibold" size="lg" style={{ marginBottom: 12 }}>⚡ Быстрые действия</Text>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <QuickAction icon="💳" label="Доход" color={tokens.colors.success} onClick={() => setActiveTab('Транзакции')} />
-              <QuickAction icon="🛒" label="Расход" color={tokens.colors.error} onClick={() => setActiveTab('Транзакции')} />
-              <QuickAction icon="🔄" label="Перевод" color={tokens.colors.info} onClick={() => setActiveTab('Транзакции')} />
-              <QuickAction icon="📊" label="Бюджет" color={tokens.colors.warning} onClick={() => setActiveTab('Бюджеты')} />
-              <QuickAction icon="📁" label="Категория" color={tokens.colors.primary} onClick={() => setActiveTab('Категории')} />
-              <QuickAction icon="📈" label="Аналитика" color={tokens.colors.success} onClick={() => setActiveTab('Аналитика')} />
-            </div>
-          </Card>
-
           {/* Recent Transactions */}
           <Card padding="lg">
             <Text fontWeight="semibold" size="lg" style={{ marginBottom: 16 }}>Последние операции</Text>
@@ -139,11 +162,11 @@ export default function FinancePage() {
         </div>
       )}
 
-      {activeTab === 'Счета' && <AccountsTab />}
-      {activeTab === 'Транзакции' && <TransactionsTab />}
-      {activeTab === 'Категории' && <CategoriesTab />}
-      {activeTab === 'Бюджеты' && <BudgetsTab />}
-      {activeTab === 'Повторения' && <RecurringTab />}
+      {activeTab === 'Счета' && <AccountsTab onAddReady={handleAccountsAdd} />}
+      {activeTab === 'Транзакции' && <TransactionsTab onAddReady={handleTransactionsAdd} />}
+      {activeTab === 'Категории' && <CategoriesTab onAddReady={handleCategoriesAdd} />}
+      {activeTab === 'Бюджеты' && <BudgetsTab onAddReady={handleBudgetsAdd} />}
+      {activeTab === 'Повторения' && <RecurringTab onAddReady={handleRecurringAdd} />}
       {activeTab === 'Аналитика' && <AnalyticsTab />}
     </AppLayout>
   );
@@ -160,38 +183,5 @@ function SummaryCard({ icon, label, value }: { icon: string; label: string; valu
         </div>
       </div>
     </Card>
-  );
-}
-
-function QuickAction({ icon, label, color, onClick }: { icon: string; label: string; color: string; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        padding: '10px 16px',
-        borderRadius: tokens.radius.lg,
-        border: `1px solid ${tokens.colors.border}`,
-        background: tokens.colors.surface,
-        cursor: 'pointer',
-        transition: `all ${tokens.transitions.fast}`,
-        fontFamily: 'inherit',
-        flex: '1 1 auto',
-        minWidth: 0,
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = color;
-        (e.currentTarget as HTMLElement).style.background = tokens.colors.surfaceHover;
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = tokens.colors.border;
-        (e.currentTarget as HTMLElement).style.background = tokens.colors.surface;
-      }}
-    >
-      <span style={{ fontSize: 18 }}>{icon}</span>
-      <Text size="sm" fontWeight="medium">{label}</Text>
-    </button>
   );
 }

@@ -67,8 +67,16 @@ export function AppLayout({ children, headerTitle, headerSubtitle, headerRight }
             <div style={{ width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg, ${tokens.colors.primary}, ${tokens.colors.success})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: '#fff' }}>S</div>
             <Text fontWeight={700} size="lg" style={{ color: tokens.colors.text }}>SuperApp</Text>
           </Link>
-          <Link href="/settings" style={{ textDecoration: 'none' }}><Avatar size="sm" name="User" /></Link>
+          {headerRight}
+          {!headerRight && <Link href="/settings" style={{ textDecoration: 'none' }}><Avatar size="sm" name="User" /></Link>}
         </div>
+
+        {headerTitle && (
+          <div style={{ padding: '8px 16px 0', background: tokens.colors.backgroundSecondary }}>
+            <Text size="xl" fontWeight="bold">{headerTitle}</Text>
+            {headerSubtitle && <Text muted size="sm">{headerSubtitle}</Text>}
+          </div>
+        )}
 
         {sidebarOpen && (
           <>
@@ -102,7 +110,6 @@ export function AppLayout({ children, headerTitle, headerSubtitle, headerRight }
         )}
 
         <main style={{ flex: 1, padding: 16 }}>
-          {headerTitle && (<div style={{ marginBottom: 16 }}><Text size="xl" fontWeight="bold">{headerTitle}</Text>{headerSubtitle && <Text muted size="sm">{headerSubtitle}</Text>}</div>)}
           {children}
         </main>
         <div style={{ padding: 12, borderTop: `1px solid ${tokens.colors.border}`, textAlign: 'center' }}><Text muted size="xs">© {new Date().getFullYear()} SuperApp</Text></div>

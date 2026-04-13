@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { accountService, type Account } from '../services/financeService';
 import { Card, Text, Button, Input, Select, Badge, Skeleton, Divider, Modal } from '@superapp/ui';
 import { tokens } from '@superapp/ui';
@@ -15,7 +15,7 @@ const CURRENCIES = [
   { value: 'EUR', label: '€ EUR' },
 ];
 
-export function AccountsTab() {
+export function AccountsTab({ onAddReady }: { onAddReady?: (fn: () => void) => void }) {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -34,6 +34,17 @@ export function AccountsTab() {
       setLoading(false);
     }
   }, []);
+
+  const onAddRef = useRef(onAddReady);
+  useEffect(() => { onAddRef.current = onAddReady; }, [onAddReady]);
+
+  const openModal = useCallback(() => setModalOpen(true), []);
+
+  useEffect(() => {
+    if (onAddRef.current) {
+      onAddRef.current(openModal);
+    }
+  }, [openModal]);
 
   useEffect(() => { loadAccounts(); }, [loadAccounts]);
 
@@ -85,11 +96,6 @@ export function AccountsTab() {
         <Text size="3xl" fontWeight="bold" style={{ marginTop: 4 }}>{formatCurrency(totalBalance)}</Text>
         <Text muted size="sm" style={{ marginTop: 4 }}>{accounts.length} счетов</Text>
       </Card>
-
-      {/* Add button */}
-      <Button variant="primary" size="lg" onPress={() => setModalOpen(true)} style={{ marginBottom: 24 }}>
-        + Добавить счёт
-      </Button>
 
       {/* Modal */}
       <Modal isOpen={modalOpen} onClose={resetForm} title={editingId ? '✏️ Редактировать счёт' : '➕ Новый счёт'} size="md">
