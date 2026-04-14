@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Link } from 'expo-router';
+import { useTheme } from '../src/theme';
 
 const modules = [
   { name: 'Дневник', icon: '📔', href: '/diary' },
@@ -11,17 +12,19 @@ const modules = [
 ];
 
 export default function HomeScreen() {
+  const { colors, theme } = useTheme();
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>SuperApp</Text>
-      <Text style={styles.subtitle}>Life Management OS</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.title, { color: colors.primary }]}>SuperApp</Text>
+      <Text style={[styles.subtitle, { color: colors.muted }]}>Life Management OS</Text>
 
       <View style={styles.grid}>
         {modules.map((mod) => (
           <Link key={mod.name} href={mod.href as any} asChild>
-            <TouchableOpacity style={styles.card}>
+            <TouchableOpacity style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <Text style={styles.icon}>{mod.icon}</Text>
-              <Text style={styles.cardTitle}>{mod.name}</Text>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>{mod.name}</Text>
             </TouchableOpacity>
           </Link>
         ))}
@@ -33,20 +36,17 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B1020',
     padding: 20,
     paddingTop: 60,
   },
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#5B6CFF',
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#888',
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -59,10 +59,8 @@ const styles = StyleSheet.create({
   card: {
     width: 140,
     padding: 16,
-    backgroundColor: '#111827',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#333',
     alignItems: 'center',
   },
   icon: {
@@ -72,6 +70,5 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#F4F7FF',
   },
 });

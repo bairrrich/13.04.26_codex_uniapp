@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, Text, Badge, Select, Button, type SelectOption } from '@superapp/ui';
+import { Card, Text, Badge, Select, Button, type SelectOption, useTheme } from '@superapp/ui';
 import { collectionsService, type CollectionItem, type CollectionType } from '../services/collectionsService';
 
 interface CollectionListProps {
@@ -49,6 +49,8 @@ const typeLabels: Record<CollectionType, string> = {
 };
 
 function StarRating({ value, onChange }: { value: number | null; onChange: (rating: number) => void }) {
+  const { tokens } = useTheme();
+
   return (
     <div style={{ display: 'flex', gap: 2 }}>
       {[1, 2, 3, 4, 5].map((r) => (
@@ -61,16 +63,16 @@ function StarRating({ value, onChange }: { value: number | null; onChange: (rati
             border: 'none',
             cursor: 'pointer',
             fontSize: 18,
-            color: (value ?? 0) >= r ? '#fbbf24' : '#444',
+            color: (value ?? 0) >= r ? tokens.warning : tokens.mutedLight,
             padding: 0,
             lineHeight: 1,
             transition: 'color 150ms',
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.color = '#fbbf24';
+            (e.currentTarget as HTMLElement).style.color = tokens.warning;
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.color = (value ?? 0) >= r ? '#fbbf24' : '#444';
+            (e.currentTarget as HTMLElement).style.color = (value ?? 0) >= r ? tokens.warning : tokens.mutedLight;
           }}
         >
           ★
@@ -82,6 +84,7 @@ function StarRating({ value, onChange }: { value: number | null; onChange: (rati
 
 export function CollectionList({ items, loading, onRefresh, typeFilter }: CollectionListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { tokens } = useTheme();
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Удалить этот элемент?')) return;
@@ -150,7 +153,7 @@ export function CollectionList({ items, loading, onRefresh, typeFilter }: Collec
               size="sm"
               loading={deletingId === item.id}
               onPress={() => handleDelete(item.id)}
-              style={{ color: '#ff6b6b', fontSize: 16, padding: '4px 8px' }}
+              style={{ color: tokens.error, fontSize: 16, padding: '4px 8px' }}
             >
               ✕
             </Button>

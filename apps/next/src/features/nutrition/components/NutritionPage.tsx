@@ -4,11 +4,13 @@ import { Card, Text, Badge, Skeleton, Button, Modal, Input, Select, TextArea } f
 import { tokens } from '@superapp/ui';
 import {
   getDailyNutrition,
+  getWeeklySummary,
   mealLogService,
   mealItemService,
   waterLogService,
   foodService,
   goalService,
+  recipeService,
   type MealLog,
   type MealItem,
   type FoodItem,
@@ -24,6 +26,50 @@ const MEAL_TYPES = [
 ] as const;
 
 const QUICK_WATER = [150, 250, 350, 500];
+
+// ============================================================
+// WEEKLY CHART
+// ============================================================
+
+function WeeklyChart({ data, goal }: { data: { date: string; dayName: string; calories: number }[]; goal: number }) {
+  const maxCal = Math.max(...data.map((d) => d.calories), goal, 1);
+  return (
+    <Card padding="lg">
+      <Text fontWeight="semibold" size="lg" style={{ marginBottom: 16 }}>📊 Неделя</Text>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', height: 140 }}>
+        {data.map((day, i) => {
+          const pct = (day.calories / maxCal) * 100;
+          const isOver = day.calories > goal && goal > 0;
+          const isToday = i === data.length - 1;
+          return (
+            <div key={day.date} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              {day.calories > 0 && (
+                <Text muted size="xs">{day.calories}</Text>
+              )}
+              <div style={{
+                width: '100%',
+                height: Math.max(pct * 1.2, 2),
+                borderRadius: 4,
+                background: isOver ? tokens.colors.error : isToday ? tokens.colors.primary : tokens.colors.warning,
+                transition: 'height 0.3s',
+                minHeight: day.calories > 0 ? 8 : 4,
+                opacity: day.calories === 0 ? 0.2 : 1,
+              }}
+                title={`${day.calories} ккал`}
+              />
+              <Text muted size="xs" style={{ fontWeight: isToday ? tokens.fontWeights.bold : tokens.fontWeights.normal, color: isToday ? tokens.colors.primary : tokens.colors.muted }}>{day.dayName}</Text>
+            </div>
+          );
+        })}
+      </div>
+      {/* Goal line */}
+      <div style={{ position: 'relative', height: 2, marginTop: -2 }}>
+        <div style={{ position: 'absolute', left: 0, right: 0, height: 2, background: tokens.colors.success, borderRadius: 1, opacity: 0.4 }} />
+      </div>
+      <Text muted size="xs" style={{ marginTop: 4 }}>Цель: {goal} ккал</Text>
+    </Card>
+  );
+}
 
 // ============================================================
 // MACRO RING
@@ -103,17 +149,27 @@ function MealAddModal({ isOpen, onClose, mealType, mealLogId, onAdded }: {
     }
   }, [isOpen]);
 
-  const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim()) return;
-    setSearching(true);
-    try {
-      const results = await foodService.search(searchQuery.trim());
-      setSearchResults(results);
-      setSearchPerformed(true);
-      setSelectedFood(null);
-    } finally {
-      setSearching(false);
+  // Debounced live search
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.length < 2) {
+      setSearchResults([]);
+      setSearchPerformed(false);
+      return;
     }
+
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const results = await foodService.search(searchQuery.trim(), 15);
+        setSearchResults(results);
+        setSearchPerformed(true);
+        setSelectedFood(null);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [searchQuery]);
 
   const computedNutrition = selectedFood ? {
@@ -179,11 +235,9 @@ function MealAddModal({ isOpen, onClose, mealType, mealLogId, onAdded }: {
         {mode === 'search' ? (
           <>
             {/* Search bar */}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Название продукта..." fullWidth autoFocus
-                onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }} />
-              <Button variant="primary" onPress={handleSearch} loading={searching}>Найти</Button>
-            </div>
+            <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Начните вводить название..." fullWidth autoFocus
+              onKeyDown={(e) => { if (e.key === 'Enter') { /* triggered by debounce */ } }} />
+            {searching && <Text muted size="sm" style={{ textAlign: 'center' }}>⏳ Ищем...</Text>}
 
             {/* Selected food preview + portion */}
             {selectedFood && (
@@ -423,12 +477,254 @@ function GoalsModal({ isOpen, onClose, goal, onSaved }: {
 }
 
 // ============================================================
+// STATS TAB
+// ============================================================
+
+function StatsTab({ nutrition, weeklyData }: { nutrition: any; weeklyData: any[] }) {
+  const consumed = nutrition?.consumed || { calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0 };
+  const goal = nutrition?.goal;
+  const total = consumed.calories + consumed.protein_g * 4 + consumed.fat_g * 9 + consumed.carbs_g * 4;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* Macro pie chart */}
+      {consumed.calories > 0 && (
+        <Card padding="lg">
+          <Text fontWeight="semibold" size="lg" style={{ marginBottom: 16 }}>🥧 Макронутриенты</Text>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+            <MacroPie protein={consumed.protein_g} fat={consumed.fat_g} carbs={consumed.carbs_g} />
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <MacroLegend label="Белки" grams={consumed.protein_g} calPerGram={4} color={tokens.colors.success} />
+              <MacroLegend label="Жиры" grams={consumed.fat_g} calPerGram={9} color={tokens.colors.error} />
+              <MacroLegend label="Углеводы" grams={consumed.carbs_g} calPerGram={4} color={tokens.colors.info} />
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Weekly summary */}
+      {weeklyData && weeklyData.length > 0 && (
+        <WeeklyChart data={weeklyData} goal={goal?.calories || 2000} />
+      )}
+
+      {/* Weekly totals */}
+      <Card padding="lg">
+        <Text fontWeight="semibold" size="lg" style={{ marginBottom: 16 }}>📈 Итого за неделю</Text>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 16 }}>
+          <StatBox label="Калории" value={weeklyData.reduce((s, d) => s + d.calories, 0).toLocaleString('ru-RU')} unit="ккал" />
+          <StatBox label="Белки" value={weeklyData.reduce((s, d) => s + d.protein_g, 0).toFixed(0)} unit="г" />
+          <StatBox label="Жиры" value={weeklyData.reduce((s, d) => s + d.fat_g, 0).toFixed(0)} unit="г" />
+          <StatBox label="Углеводы" value={weeklyData.reduce((s, d) => s + d.carbs_g, 0).toFixed(0)} unit="г" />
+          <StatBox label="Вода" value={(weeklyData.reduce((s, d) => s + d.water_ml, 0) / 1000).toFixed(1)} unit="л" />
+          <StatBox label="Приёмы" value={weeklyData.reduce((s, d) => s + d.mealCount, 0)} unit="" />
+        </div>
+      </Card>
+
+      {/* Daily averages */}
+      {weeklyData && weeklyData.length > 0 && (
+        <Card padding="lg">
+          <Text fontWeight="semibold" size="lg" style={{ marginBottom: 16 }}>📊 Среднее в день</Text>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 12 }}>
+            <StatBox label="Калории" value={Math.round(weeklyData.reduce((s, d) => s + d.calories, 0) / 7).toLocaleString('ru-RU')} unit="ккал" />
+            <StatBox label="Белки" value={(weeklyData.reduce((s, d) => s + d.protein_g, 0) / 7).toFixed(0)} unit="г" />
+            <StatBox label="Жиры" value={(weeklyData.reduce((s, d) => s + d.fat_g, 0) / 7).toFixed(0)} unit="г" />
+            <StatBox label="Углеводы" value={(weeklyData.reduce((s, d) => s + d.carbs_g, 0) / 7).toFixed(0)} unit="г" />
+            <StatBox label="Вода" value={(weeklyData.reduce((s, d) => s + d.water_ml, 0) / 7 / 1000).toFixed(1)} unit="л" />
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function MacroPie({ protein, fat, carbs }: { protein: number; fat: number; carbs: number }) {
+  const pCal = protein * 4;
+  const fCal = fat * 9;
+  const cCal = carbs * 4;
+  const total = pCal + fCal + cCal;
+  if (total === 0) return null;
+
+  const pPct = pCal / total;
+  const fPct = fCal / total;
+
+  return (
+    <svg width="120" height="120" viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="50" fill="none" stroke={tokens.colors.border} strokeWidth="16" />
+      <circle cx="60" cy="60" r="50" fill="none" stroke={tokens.colors.success} strokeWidth="16"
+        strokeDasharray={`${pPct * 314} ${314 - pPct * 314}`} transform="rotate(-90 60 60)" />
+      <circle cx="60" cy="60" r="50" fill="none" stroke={tokens.colors.error} strokeWidth="16"
+        strokeDasharray={`${fPct * 314} ${314 - fPct * 314}`} strokeDashoffset={`-${pPct * 314}`} transform="rotate(-90 60 60)" />
+      <circle cx="60" cy="60" r="50" fill="none" stroke={tokens.colors.info} strokeWidth="16"
+        strokeDasharray={`${(1 - pPct - fPct) * 314} ${314 - (1 - pPct - fPct) * 314}`} strokeDashoffset={`-${(pPct + fPct) * 314}`} transform="rotate(-90 60 60)" />
+      <text x="60" y="56" textAnchor="middle" fill={tokens.colors.text} fontSize="14" fontWeight="bold">{Math.round(total)}</text>
+      <text x="60" y="72" textAnchor="middle" fill={tokens.colors.muted} fontSize="10">ккал</text>
+    </svg>
+  );
+}
+
+function MacroLegend({ label, grams, calPerGram, color }: { label: string; grams: number; calPerGram: number; color: string }) {
+  const cal = Math.round(grams * calPerGram);
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid ${tokens.colors.border}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ width: 12, height: 12, borderRadius: 2, background: color }} />
+        <Text size="sm">{label}</Text>
+      </div>
+      <div style={{ textAlign: 'right' }}>
+        <Text size="sm" fontWeight="semibold" as="span">{grams.toFixed(0)}г <Text muted size="xs" as="span">({cal} ккал)</Text></Text>
+      </div>
+    </div>
+  );
+}
+
+function StatBox({ label, value, unit }: { label: string; value: string; unit: string }) {
+  return (
+    <div style={{ padding: 12, borderRadius: 8, background: tokens.colors.surfaceHover, textAlign: 'center' }}>
+      <Text muted size="xs">{label}</Text>
+      <Text size="lg" fontWeight="bold" as="span">{value} <Text muted size="xs" as="span">{unit}</Text></Text>
+    </div>
+  );
+}
+
+// ============================================================
+// RECIPES TAB
+// ============================================================
+
+function RecipesTab() {
+  const [recipes, setRecipes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await recipeService.list(50);
+      setRecipes(data);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <Button variant="primary" size="lg" onPress={() => setModalOpen(true)}>+ Добавить рецепт</Button>
+
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[1, 2, 3].map((i) => <Card key={i} padding="lg"><Skeleton width="60%" height={18} style={{ marginBottom: 8 }} /><Skeleton width="40%" height={14} /></Card>)}
+        </div>
+      ) : recipes.length === 0 ? (
+        <Card padding="2xl" variant="outlined">
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>📖</div>
+            <Text muted size="lg">Нет рецептов</Text>
+            <Text muted size="sm" style={{ marginTop: 4 }}>Создайте первый рецепт с ингредиентами и КБЖУ</Text>
+          </div>
+        </Card>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+          {recipes.map((recipe) => (
+            <Card key={recipe.id} padding="lg" hoverable>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                <Text fontWeight="semibold" size="lg">{recipe.title}</Text>
+                <Badge variant="default" size="sm">{recipe.servings || 1} порц.</Badge>
+              </div>
+              {recipe.description && <Text muted size="sm" style={{ marginBottom: 8 }}>{recipe.description}</Text>}
+              {(recipe.prep_time_minutes || recipe.cook_time_minutes) && (
+                <Text muted size="xs">⏱️ Подг: {recipe.prep_time_minutes || 0} мин, Готовка: {recipe.cook_time_minutes || 0} мин</Text>
+              )}
+              <Button variant="ghost" size="sm" style={{ marginTop: 8 }} onPress={async () => {
+                try { await recipeService.delete(recipe.id); loadData(); } catch { /* */ }
+              }}>🗑️ Удалить</Button>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="📖 Новый рецепт" size="lg">
+        <RecipeForm onClose={() => setModalOpen(false)} onSaved={loadData} />
+      </Modal>
+    </div>
+  );
+}
+
+function RecipeForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [prepTime, setPrepTime] = useState('');
+  const [cookTime, setCookTime] = useState('');
+  const [servings, setServings] = useState('1');
+  const [instructions, setInstructions] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!title.trim()) return;
+    setSaving(true);
+    try {
+      await recipeService.create({
+        title: title.trim(),
+        description: description.trim() || undefined,
+        prep_time_minutes: parseInt(prepTime) || undefined,
+        cook_time_minutes: parseInt(cookTime) || undefined,
+        servings: parseInt(servings) || 1,
+        instructions: instructions.trim() || undefined,
+        items: [],
+      });
+      onSaved();
+      onClose();
+    } catch { /* */ } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Название рецепта" fullWidth autoFocus />
+      <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Описание (необязательно)" fullWidth />
+      <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <Text muted size="sm" style={{ marginBottom: 4 }}>Подготовка (мин)</Text>
+          <Input type="number" value={prepTime} onChange={(e) => setPrepTime(e.target.value)} fullWidth />
+        </div>
+        <div style={{ flex: 1 }}>
+          <Text muted size="sm" style={{ marginBottom: 4 }}>Готовка (мин)</Text>
+          <Input type="number" value={cookTime} onChange={(e) => setCookTime(e.target.value)} fullWidth />
+        </div>
+        <div style={{ flex: 1 }}>
+          <Text muted size="sm" style={{ marginBottom: 4 }}>Порции</Text>
+          <Input type="number" value={servings} onChange={(e) => setServings(e.target.value)} fullWidth />
+        </div>
+      </div>
+      <div>
+        <Text muted size="sm" style={{ marginBottom: 4 }}>Инструкция</Text>
+        <TextArea value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Шаги приготовления..." rows={4} fullWidth />
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <Button variant="primary" onPress={handleSave} loading={saving}>Сохранить</Button>
+        <Button variant="ghost" onPress={onClose}>Отмена</Button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 // MAIN NUTRITION PAGE
 // ============================================================
 
+const NUTRITION_TABS = [
+  { id: 'daily', label: '📅 День' },
+  { id: 'recipes', label: '📖 Рецепты' },
+  { id: 'stats', label: '📊 Статистика' },
+] as const;
+type NutritionTab = typeof NUTRITION_TABS[number]['id'];
+
 export function NutritionPage() {
+  const [activeTab, setActiveTab] = useState<NutritionTab>('daily');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [nutrition, setNutrition] = useState<Awaited<ReturnType<typeof getDailyNutrition>> | null>(null);
+  const [weeklyData, setWeeklyData] = useState<{ date: string; dayName: string; calories: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [addingMealType, setAddingMealType] = useState<string | null>(null);
   const [currentMealLogId, setCurrentMealLogId] = useState<string | null>(null);
@@ -437,12 +733,17 @@ export function NutritionPage() {
   const [deletingMealLogId, setDeletingMealLogId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (targetDate?: string) => {
+    const d = targetDate || date;
     setLoading(true);
     setError(null);
     try {
-      const data = await getDailyNutrition(date);
+      const [data, weekly] = await Promise.all([
+        getDailyNutrition(d),
+        getWeeklySummary(d),
+      ]);
       setNutrition(data);
+      setWeeklyData(weekly.days);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка загрузки');
     } finally {
@@ -450,7 +751,7 @@ export function NutritionPage() {
     }
   }, [date]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => { refresh(); }, [date]);
 
   const addMeal = async (mealType: string) => {
     try {
@@ -498,124 +799,166 @@ export function NutritionPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* Date picker */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        <Button variant="secondary" size="sm" onPress={() => { const d = new Date(date); d.setDate(d.getDate() - 1); setDate(d.toISOString().slice(0, 10)); }}>← Вчера</Button>
-        <Text fontWeight="semibold" size="lg" style={{ flex: 1, textAlign: 'center', minWidth: 200 }}>
-          {new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
-        </Text>
-        <Button variant="secondary" size="sm" onPress={() => { const d = new Date(date); d.setDate(d.getDate() + 1); setDate(d.toISOString().slice(0, 10)); }}>Завтра →</Button>
-        <Button variant="ghost" size="sm" onPress={() => setGoalsOpen(true)}>⚙️ Цели</Button>
+      {/* Internal tabs */}
+      <div style={{ display: 'flex', gap: 4, overflowX: 'auto', paddingBottom: 8 }}>
+        {NUTRITION_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              padding: '8px 16px',
+              fontSize: tokens.fontSizes.sm,
+              fontWeight: activeTab === tab.id ? tokens.fontWeights.semibold : tokens.fontWeights.medium,
+              color: activeTab === tab.id ? tokens.colors.primary : tokens.colors.textSecondary,
+              backgroundColor: activeTab === tab.id ? tokens.colors.primaryLight : 'transparent',
+              border: `1px solid ${activeTab === tab.id ? tokens.colors.primary : tokens.colors.border}`,
+              borderRadius: tokens.radius.md,
+              cursor: 'pointer',
+              transition: `all ${tokens.transitions.fast}`,
+              fontFamily: 'inherit',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* Error banner */}
-      {error && (
-        <Card padding="lg" style={{ borderColor: tokens.colors.error }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text error>⚠️ {error}</Text>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <Button variant="ghost" size="sm" onPress={() => refresh()}>🔄 Обновить</Button>
-              <Button variant="ghost" size="sm" onPress={() => setError(null)}>✕</Button>
-            </div>
+      {activeTab === 'daily' && (
+        <>
+          {/* Date picker */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Button variant="secondary" size="sm" onPress={() => { const d = new Date(date); d.setDate(d.getDate() - 1); setDate(d.toISOString().slice(0, 10)); }}>← Вчера</Button>
+            <Text fontWeight="semibold" size="lg" style={{ flex: 1, textAlign: 'center', minWidth: 200 }}>
+              {new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </Text>
+            <Button variant="secondary" size="sm" onPress={() => { const d = new Date(date); d.setDate(d.getDate() + 1); setDate(d.toISOString().slice(0, 10)); }}>Завтра →</Button>
+            <Button variant="ghost" size="sm" onPress={() => setGoalsOpen(true)}>⚙️ Цели</Button>
           </div>
-        </Card>
-      )}
 
-      {/* Macro rings */}
-      {goal && (
-        <Card padding="lg">
-          <Text fontWeight="semibold" size="lg" style={{ marginBottom: 16 }}>🎯 Дневные цели</Text>
-          <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: 16 }}>
-            <MacroRing label="Калории" current={consumed.calories} target={goal.calories} unit="" color={tokens.colors.warning} icon="🔥" />
-            <MacroRing label="Белки" current={consumed.protein_g} target={goal.protein_g} unit="г" color={tokens.colors.success} icon="🥩" />
-            <MacroRing label="Жиры" current={consumed.fat_g} target={goal.fat_g} unit="г" color={tokens.colors.error} icon="🧈" />
-            <MacroRing label="Углеводы" current={consumed.carbs_g} target={goal.carbs_g} unit="г" color={tokens.colors.info} icon="🍞" />
-          </div>
-        </Card>
-      )}
-
-      {/* Water */}
-      <WaterTracker
-        total={consumed.water_ml}
-        goal={goal?.water_ml || 2000}
-        onAdd={addWater}
-        onRefresh={refresh}
-      />
-
-      {/* Meals */}
-      {MEAL_TYPES.map((mt) => {
-        const meal = nutrition.meals.find((m) => m.meal_type === mt.value);
-        const mealCalories = meal?.items.reduce((s, i) => s + (i.calories || 0), 0) || 0;
-
-        return (
-          <Card key={mt.value} padding="lg">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: mt.color }} />
-                <Text fontWeight="semibold" size="lg">{mt.label}</Text>
-                <Text muted size="sm">{mealCalories} ккал</Text>
+          {/* Error banner */}
+          {error && (
+            <Card padding="lg" style={{ borderColor: tokens.colors.error }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text error>⚠️ {error}</Text>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <Button variant="ghost" size="sm" onPress={() => refresh()}>🔄 Обновить</Button>
+                  <Button variant="ghost" size="sm" onPress={() => setError(null)}>✕</Button>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: 4 }}>
-                <Button variant="ghost" size="sm" onPress={() => { if (!meal) addMeal(mt.value); else { setCurrentMealLogId(meal.id); setAddingMealType(mt.value); } }}>
-                  + Добавить
-                </Button>
-                {meal && (
-                  <Button variant="ghost" size="sm" onPress={() => { if (confirm('Удалить приём пищи?')) deleteMeal(meal.id); }}>
-                    🗑️
-                  </Button>
-                )}
-              </div>
-            </div>
+            </Card>
+          )
+          }
 
-            {meal && meal.items.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
-                {meal.items.map((item) => (
-                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', borderRadius: 6, background: tokens.colors.surfaceHover, opacity: deletingItemId === item.id ? 0.5 : 1 }}>
-                    <div>
-                      <Text size="sm">{item.name}</Text>
-                      <Text muted size="xs">{item.grams}г</Text>
+          {/* Macro rings */}
+          {
+            goal && (
+              <Card padding="lg">
+                <Text fontWeight="semibold" size="lg" style={{ marginBottom: 16 }}>🎯 Дневные цели</Text>
+                <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: 16 }}>
+                  <MacroRing label="Калории" current={consumed.calories} target={goal.calories} unit="" color={tokens.colors.warning} icon="🔥" />
+                  <MacroRing label="Белки" current={consumed.protein_g} target={goal.protein_g} unit="г" color={tokens.colors.success} icon="🥩" />
+                  <MacroRing label="Жиры" current={consumed.fat_g} target={goal.fat_g} unit="г" color={tokens.colors.error} icon="🧈" />
+                  <MacroRing label="Углеводы" current={consumed.carbs_g} target={goal.carbs_g} unit="г" color={tokens.colors.info} icon="🍞" />
+                </div>
+              </Card>
+            )
+          }
+
+          {/* Water */}
+          <WaterTracker
+            total={consumed.water_ml}
+            goal={goal?.water_ml || 2000}
+            onAdd={addWater}
+            onRefresh={refresh}
+          />
+
+          {/* Meals */}
+          {
+            MEAL_TYPES.map((mt) => {
+              const meal = nutrition.meals.find((m) => m.meal_type === mt.value);
+              const mealCalories = meal?.items.reduce((s, i) => s + (i.calories || 0), 0) || 0;
+
+              return (
+                <Card key={mt.value} padding="lg">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: mt.color }} />
+                      <Text fontWeight="semibold" size="lg">{mt.label}</Text>
+                      <Text muted size="sm">{mealCalories} ккал</Text>
                     </div>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <Text muted size="xs">{item.calories} ккал</Text>
-                      <Text muted size="xs">Б:{item.protein_g} Ж:{item.fat_g} У:{item.carbs_g}</Text>
-                      <button
-                        onClick={() => deleteFoodItem(item.id, meal.id)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, padding: 4, opacity: 0.6, transition: 'opacity 0.15s' }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.6'; }}
-                        title="Удалить"
-                      >
-                        ✕
-                      </button>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <Button variant="ghost" size="sm" onPress={() => { if (!meal) addMeal(mt.value); else { setCurrentMealLogId(meal.id); setAddingMealType(mt.value); } }}>
+                        + Добавить
+                      </Button>
+                      {meal && (
+                        <Button variant="ghost" size="sm" onPress={() => { if (confirm('Удалить приём пищи?')) deleteMeal(meal.id); }}>
+                          🗑️
+                        </Button>
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
 
-            {!meal && (
-              <Text muted size="sm" style={{ marginTop: 4 }}>Нет записей</Text>
-            )}
-          </Card>
-        );
-      })}
+                  {meal && meal.items.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
+                      {meal.items.map((item) => (
+                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', borderRadius: 6, background: tokens.colors.surfaceHover, opacity: deletingItemId === item.id ? 0.5 : 1 }}>
+                          <div>
+                            <Text size="sm">{item.name}</Text>
+                            <Text muted size="xs">{item.grams}г</Text>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <Text muted size="xs">{item.calories} ккал</Text>
+                            <Text muted size="xs">Б:{item.protein_g} Ж:{item.fat_g} У:{item.carbs_g}</Text>
+                            <button
+                              onClick={() => deleteFoodItem(item.id, meal.id)}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, padding: 4, opacity: 0.6, transition: 'opacity 0.15s' }}
+                              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+                              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.6'; }}
+                              title="Удалить"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-      {/* Add modal */}
-      <MealAddModal
-        isOpen={addingMealType !== null}
-        onClose={() => { setAddingMealType(null); setCurrentMealLogId(null); }}
-        mealType={addingMealType || ''}
-        mealLogId={currentMealLogId}
-        onAdded={refresh}
-      />
+                  {!meal && (
+                    <Text muted size="sm" style={{ marginTop: 4 }}>Нет записей</Text>
+                  )}
+                </Card>
+              );
+            })
+          }
 
-      {/* Goals modal */}
-      <GoalsModal
-        isOpen={goalsOpen}
-        onClose={() => setGoalsOpen(false)}
-        goal={nutrition.goal}
-        onSaved={refresh}
-      />
+          {/* Add modal */}
+          <MealAddModal
+            isOpen={addingMealType !== null}
+            onClose={() => { setAddingMealType(null); setCurrentMealLogId(null); }}
+            mealType={addingMealType || ''}
+            mealLogId={currentMealLogId}
+            onAdded={refresh}
+          />
+
+          {/* Goals modal */}
+          <GoalsModal
+            isOpen={goalsOpen}
+            onClose={() => setGoalsOpen(false)}
+            goal={nutrition.goal}
+            onSaved={refresh}
+          />
+        </>
+      )}
+
+      {activeTab === 'recipes' && (
+        <RecipesTab />
+      )}
+
+      {activeTab === 'stats' && (
+        <StatsTab nutrition={nutrition} weeklyData={weeklyData} />
+      )}
     </div>
   );
 }

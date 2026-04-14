@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { DiaryEntry } from '../services/diaryService';
 import { diaryService } from '../services/diaryService';
-import { Card, Text, Badge, Button, Input } from '@superapp/ui';
+import { Card, Text, Badge, Button, Input, useTheme } from '@superapp/ui';
 import { DiaryEntryForm } from './DiaryEntryForm';
 
 interface DiaryEntryListProps {
@@ -35,6 +35,7 @@ export function DiaryEntryList({
   const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const { tokens } = useTheme();
 
   const handleDelete = async (id: string) => {
     if (!confirm('Удалить запись?')) return;
@@ -71,14 +72,14 @@ export function DiaryEntryList({
         {[1, 2, 3].map((i) => (
           <Card key={i} padding="lg">
             <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1e293b' }} />
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: tokens.surfaceHover }} />
               <div style={{ flex: 1 }}>
-                <div style={{ width: 120, height: 14, background: '#1e293b', borderRadius: 6, marginBottom: 8 }} />
-                <div style={{ width: 200, height: 12, background: '#1e293b', borderRadius: 6 }} />
+                <div style={{ width: 120, height: 14, background: tokens.surfaceHover, borderRadius: 6, marginBottom: 8 }} />
+                <div style={{ width: 200, height: 12, background: tokens.surfaceHover, borderRadius: 6 }} />
               </div>
             </div>
-            <div style={{ width: '100%', height: 12, background: '#1e293b', borderRadius: 6, marginBottom: 8 }} />
-            <div style={{ width: '80%', height: 12, background: '#1e293b', borderRadius: 6 }} />
+            <div style={{ width: '100%', height: 12, background: tokens.surfaceHover, borderRadius: 6, marginBottom: 8 }} />
+            <div style={{ width: '80%', height: 12, background: tokens.surfaceHover, borderRadius: 6 }} />
           </Card>
         ))}
       </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { Button, Input, Select, Card, Text, type SelectOption } from '@superapp/ui';
+import { Button, Input, Select, Card, Text, type SelectOption, useTheme } from '@superapp/ui';
 import { collectionsService, type CollectionType } from '../services/collectionsService';
 
 interface CollectionFormProps {
@@ -27,6 +27,7 @@ export function CollectionForm({ onSuccess }: CollectionFormProps) {
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { tokens } = useTheme();
 
   const isValid = title.trim().length >= 2;
 
@@ -96,7 +97,7 @@ export function CollectionForm({ onSuccess }: CollectionFormProps) {
       </form>
 
       {error && (
-        <Text size="sm" style={{ color: '#ef4444', marginTop: 12 }}>
+        <Text size="sm" style={{ color: tokens.error, marginTop: 12 }}>
           {error}
         </Text>
       )}

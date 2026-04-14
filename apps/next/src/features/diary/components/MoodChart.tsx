@@ -1,15 +1,16 @@
 'use client';
 
-import { Card, Text, Badge } from '@superapp/ui';
+import { Card, Text, Badge, useTheme } from '@superapp/ui';
 
 interface MoodChartProps {
   data: { date: string; mood: number }[];
 }
 
 const moodEmojis = ['😢', '😟', '😐', '🙂', '😊'];
-const moodColors = ['#ef4444', '#f59e0b', '#eab308', '#84cc16', '#22c55e'];
 
 export function MoodChart({ data }: MoodChartProps) {
+  const { tokens } = useTheme();
+
   if (data.length === 0) {
     return (
       <Card padding="lg" variant="outlined">
@@ -20,6 +21,15 @@ export function MoodChart({ data }: MoodChartProps) {
 
   const last7 = data.slice(-7);
   const avgMood = data.reduce((sum, d) => sum + d.mood, 0) / data.length;
+
+  // Theme-aware mood colors using semantic tokens
+  const moodColorMap: Record<number, string> = {
+    1: tokens.error,
+    2: tokens.warning,
+    3: tokens.info,
+    4: tokens.success,
+    5: tokens.success,
+  };
 
   return (
     <Card padding="lg">
@@ -50,19 +60,19 @@ export function MoodChart({ data }: MoodChartProps) {
                 maxWidth: 32,
                 height: `${d.mood * 20}%`,
                 minHeight: 8,
-                background: moodColors[d.mood - 1],
+                background: moodColorMap[d.mood],
                 borderRadius: 6,
                 transition: 'height 0.3s',
               }}
             />
-            <span style={{ fontSize: 10, color: '#64748B' }}>{d.date}</span>
+            <span style={{ fontSize: 10, color: tokens.muted }}>{d.date}</span>
           </div>
         ))}
       </div>
 
       {/* Trend */}
       {data.length >= 2 && (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingTop: 12, borderTop: '1px solid #1e293b' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingTop: 12, borderTop: `1px solid ${tokens.border}` }}>
           <Text muted size="sm">Тренд:</Text>
           {data[data.length - 1].mood > data[data.length - 2].mood ? (
             <Badge variant="success" dot>Растёт 📈</Badge>

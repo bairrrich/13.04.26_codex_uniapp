@@ -1,40 +1,8 @@
-// Design tokens - comprehensive design system
+import { darkTheme, lightTheme } from './themes';
+
+// Default exports for backward compatibility
 export const tokens = {
-  colors: {
-    // Primary
-    primary: '#5B6CFF',
-    primaryHover: '#4A5AEF',
-    primaryActive: '#3D4BD8',
-    primaryLight: 'rgba(91, 108, 255, 0.15)',
-
-    // Background
-    background: '#0B1020',
-    backgroundSecondary: '#0F1525',
-    surface: '#111827',
-    surfaceHover: '#1a2332',
-    surfaceActive: '#1e2a4a',
-
-    // Border
-    border: '#1e293b',
-    borderHover: '#334155',
-    borderFocus: '#5B6CFF',
-
-    // Text
-    text: '#F4F7FF',
-    textSecondary: '#CBD5E1',
-    muted: '#64748B',
-    mutedLight: '#475569',
-
-    // States
-    success: '#22c55e',
-    successBg: 'rgba(34, 197, 94, 0.15)',
-    error: '#ef4444',
-    errorBg: 'rgba(239, 68, 68, 0.15)',
-    warning: '#f59e0b',
-    warningBg: 'rgba(245, 158, 11, 0.15)',
-    info: '#3b82f6',
-    infoBg: 'rgba(59, 130, 246, 0.15)',
-  },
+  ...darkTheme,
   space: {
     xs: 4,
     sm: 8,
@@ -71,10 +39,10 @@ export const tokens = {
     bold: 700,
   },
   shadows: {
-    sm: '0 1px 2px rgba(0,0,0,0.3)',
-    md: '0 4px 6px rgba(0,0,0,0.3)',
-    lg: '0 10px 15px rgba(0,0,0,0.4)',
-    xl: '0 20px 25px rgba(0,0,0,0.5)',
+    sm: '0 1px 2px rgba(0,0,0,0.15)',
+    md: '0 4px 6px rgba(0,0,0,0.15)',
+    lg: '0 10px 15px rgba(0,0,0,0.2)',
+    xl: '0 20px 25px rgba(0,0,0,0.3)',
   },
   transitions: {
     fast: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -89,4 +57,5 @@ export const tokens = {
   },
 } as const;
 
+export { darkTheme, lightTheme };
 export type Token = typeof tokens;

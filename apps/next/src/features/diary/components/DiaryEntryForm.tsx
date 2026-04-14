@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { diaryService } from '../services/diaryService';
-import { Button, Card, Text, TextArea, Input, Badge } from '@superapp/ui';
+import { Button, Card, Text, TextArea, Input, Badge, useTheme } from '@superapp/ui';
 
 interface DiaryEntryFormProps {
   onSuccess?: () => void;
@@ -28,6 +28,7 @@ export function DiaryEntryForm({
   const [moodScore, setMoodScore] = useState(initialMood ?? 3);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { tokens } = useTheme();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -76,15 +77,15 @@ export function DiaryEntryForm({
                   gap: 4,
                   padding: '8px 12px',
                   borderRadius: 12,
-                  border: moodScore === i + 1 ? '2px solid #5B6CFF' : '2px solid #1e293b',
-                  background: moodScore === i + 1 ? '#1e2a4a' : 'transparent',
+                  border: moodScore === i + 1 ? `2px solid ${tokens.primary}` : `2px solid ${tokens.border}`,
+                  background: moodScore === i + 1 ? tokens.surfaceActive : 'transparent',
                   cursor: 'pointer',
                   transition: 'all 150ms',
                   minWidth: 64,
                 }}
               >
                 <span style={{ fontSize: 28 }}>{emoji}</span>
-                <span style={{ fontSize: 10, color: moodScore === i + 1 ? '#5B6CFF' : '#64748B' }}>
+                <span style={{ fontSize: 10, color: moodScore === i + 1 ? tokens.primary : tokens.muted }}>
                   {moodLabels[i]}
                 </span>
               </button>

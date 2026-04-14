@@ -551,7 +551,7 @@ export async function getDailyNutrition(date: string): Promise<DailyNutrition> {
   const waterTotal = await waterLogService.getTotalByDate(date);
 
   const consumed = meals.reduce(
-    (acc, meal) => {
+    (acc: DailyNutrition['consumed'], meal) => {
       meal.items.forEach((item) => {
         acc.calories += item.calories || 0;
         acc.protein_g += item.protein_g || 0;
@@ -570,4 +570,92 @@ export async function getDailyNutrition(date: string): Promise<DailyNutrition> {
     consumed,
     meals,
   };
+}
+
+export interface WeeklySummary {
+  days: {
+    date: string;
+    dayName: string;
+    calories: number;
+    protein_g: number;
+    fat_g: number;
+    carbs_g: number;
+    water_ml: number;
+    mealCount: number;
+  }[];
+}
+
+export async function getWeeklySummary(endDate?: string): Promise<WeeklySummary> {
+  const end = endDate ? new Date(endDate) : new Date();
+  const start = new Date(end);
+  start.setDate(start.getDate() - 6);
+
+  // Fetch all meal logs and water logs for the 7-day range in single requests
+  const startStr = start.toISOString();
+  const endStr = new Date(end.getTime() + 86400000).toISOString(); // end of day
+
+  const [mealsResult, waterResult, goal] = await Promise.all([
+    supabase
+      .from('meal_logs')
+      .select(`*, meal_items(*)`)
+      .gte('eaten_at', startStr)
+      .lte('eaten_at', endStr),
+    supabase
+      .from('water_logs')
+      .select('consumed_at, amount_ml')
+      .gte('consumed_at', startStr)
+      .lte('consumed_at', endStr),
+    goalService.get(),
+  ]);
+
+  const meals = (mealsResult.data || []) as any[];
+  const waterLogs = (waterResult.data || []) as any[];
+
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const dayName = d.toLocaleDateString('ru-RU', { weekday: 'short' });
+    const dayStart = new Date(d);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(d);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    const dayMeals = meals.filter((m) => {
+      const t = new Date(m.eaten_at).getTime();
+      return t >= dayStart.getTime() && t <= dayEnd.getTime();
+    });
+
+    let calories = 0, protein_g = 0, fat_g = 0, carbs_g = 0, fiber_g = 0;
+    dayMeals.forEach((m) => {
+      (m.meal_items || []).forEach((item: any) => {
+        calories += item.calories || 0;
+        protein_g += item.protein_g || 0;
+        fat_g += item.fat_g || 0;
+        carbs_g += item.carbs_g || 0;
+        fiber_g += item.fiber_g || 0;
+      });
+    });
+
+    const dayWater = waterLogs
+      .filter((w) => {
+        const t = new Date(w.consumed_at).getTime();
+        return t >= dayStart.getTime() && t <= dayEnd.getTime();
+      })
+      .reduce((sum, w) => sum + w.amount_ml, 0);
+
+    days.push({
+      date: dateStr,
+      dayName,
+      calories,
+      protein_g,
+      fat_g,
+      carbs_g,
+      water_ml: dayWater,
+      mealCount: dayMeals.length,
+    });
+  }
+
+  return { days };
 }

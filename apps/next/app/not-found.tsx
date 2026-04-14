@@ -1,14 +1,15 @@
+'use client';
+
+import { Text, Heading, Button } from '@superapp/ui';
+
 export default function NotFound() {
   return (
     <div style={{ padding: 40, textAlign: 'center' }}>
-      <h1>404</h1>
-      <p style={{ color: '#888' }}>Страница не найдена</p>
-      <a
-        href="/"
-        style={{ color: '#5B6CFF', textDecoration: 'none' }}
-      >
+      <Heading level={1}>404</Heading>
+      <Text muted size="xl" style={{ marginBottom: 24 }}>Страница не найдена</Text>
+      <Button onPress={() => window.location.href = '/'} size="lg">
         Вернуться на главную
-      </a>
+      </Button>
     </div>
   );
 }

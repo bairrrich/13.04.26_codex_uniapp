@@ -1,3 +1,6 @@
+'use client';
+
+import { useTheme } from '../ThemeProvider';
 import { tokens } from '../tokens';
 import type { CSSProperties, ReactNode } from 'react';
 
@@ -26,21 +29,22 @@ export function Heading({
   className,
   gradient = false,
 }: HeadingProps) {
-  const Component = `h${level}` as const;
+  const { tokens: themeTokens } = useTheme();
   const config = levelConfig[level];
+  const Component = `h${level}` as const;
 
   return (
     <Component
       className={className}
       style={{
         margin: config.margin,
-        color: gradient ? 'transparent' : tokens.colors.text,
+        color: gradient ? 'transparent' : themeTokens.text,
         fontSize: config.fontSize,
         fontWeight: config.fontWeight,
         textAlign,
         lineHeight: 1.3,
         ...(gradient && {
-          backgroundImage: `linear-gradient(135deg, ${tokens.colors.primary}, ${tokens.colors.success})`,
+          backgroundImage: `linear-gradient(135deg, ${themeTokens.primary}, ${themeTokens.success})`,
           WebkitBackgroundClip: 'text',
           backgroundClip: 'text',
         }),

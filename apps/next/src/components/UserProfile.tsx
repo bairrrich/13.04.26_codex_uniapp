@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
-import { Button, Text } from '@superapp/ui';
+import { Button, Text, useTheme } from '@superapp/ui';
 
 export function UserProfile() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { tokens } = useTheme();
 
   useEffect(() => {
     // Get initial session
@@ -46,7 +47,7 @@ export function UserProfile() {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      borderBottom: '1px solid #333',
+      borderBottom: `1px solid ${tokens.border}`,
     }}>
       <div>
         <Text as="span" style={{ marginRight: 16 }}>{user.email}</Text>

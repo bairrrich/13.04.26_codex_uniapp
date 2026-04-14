@@ -1,6 +1,7 @@
 'use client';
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { useTheme, Button, Text, Heading } from '@superapp/ui';
 
 interface Props {
   children: ReactNode;
@@ -11,7 +12,7 @@ interface State {
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+class ErrorBoundaryClass extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -27,28 +28,28 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      return (
-        <div style={{ padding: 40, textAlign: 'center' }}>
-          <h1>Что-то пошло не так</h1>
-          <p style={{ color: '#888' }}>{this.state.error?.message}</p>
-          <button
-            onClick={() => this.setState({ hasError: false, error: null })}
-            style={{
-              padding: '10px 20px',
-              borderRadius: 6,
-              border: 'none',
-              background: '#5B6CFF',
-              color: '#fff',
-              cursor: 'pointer',
-              marginTop: 16,
-            }}
-          >
-            Попробовать снова
-          </button>
-        </div>
-      );
+      return <ErrorBoundaryFallback error={this.state.error} />;
     }
 
     return this.props.children;
   }
 }
+
+function ErrorBoundaryFallback({ error }: { error: Error | null }) {
+  const { tokens } = useTheme();
+
+  return (
+    <div style={{ padding: 40, textAlign: 'center' }}>
+      <Heading level={2}>Что-то пошло не так</Heading>
+      <Text style={{ color: tokens.muted, marginBottom: 16 }}>{error?.message}</Text>
+      <Button
+        onPress={() => window.location.reload()}
+        size="lg"
+      >
+        Перезагрузить страницу
+      </Button>
+    </div>
+  );
+}
+
+export { ErrorBoundaryClass as ErrorBoundary };

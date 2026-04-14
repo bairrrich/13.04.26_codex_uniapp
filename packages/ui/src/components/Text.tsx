@@ -1,8 +1,13 @@
+'use client';
+
 import { tokens } from '../tokens';
-import type { CSSProperties, ReactNode } from 'react';
+import { useTheme } from '../ThemeProvider';
+import type { CSSProperties, ElementType, ComponentProps } from 'react';
+
+type As = 'p' | 'span' | 'div' | 'label' | 'small' | 'code' | 'pre';
 
 export interface TextProps {
-  children: ReactNode;
+  children: React.ReactNode;
   muted?: boolean;
   error?: boolean;
   success?: boolean;
@@ -13,34 +18,14 @@ export interface TextProps {
   lineHeight?: number;
   style?: CSSProperties;
   className?: string;
-  as?: 'p' | 'span' | 'div' | 'label' | 'small' | 'code' | 'pre';
+  as?: As;
   truncate?: boolean;
 }
 
-export function Text({
-  children,
-  muted = false,
-  error = false,
-  success = false,
-  warning = false,
-  size = 'md',
-  fontWeight = 'normal',
-  textAlign,
-  lineHeight,
-  style,
-  className,
-  as: Component = 'p',
-  truncate = false,
-}: TextProps) {
-  const color = error ? tokens.colors.error
-    : success ? tokens.colors.success
-      : warning ? tokens.colors.warning
-        : muted ? tokens.colors.muted
-          : tokens.colors.text;
-
-  const weight = typeof fontWeight === 'string'
-    ? tokens.fontWeights[fontWeight as keyof typeof tokens.fontWeights] ?? fontWeight
-    : fontWeight;
+export function Text({ children, muted = false, error = false, success = false, warning = false, size = 'md', fontWeight = 'normal', textAlign, lineHeight, style, className, as: Component = 'p', truncate = false }: TextProps) {
+  const { tokens: colors } = useTheme();
+  const color = error ? colors.error : success ? colors.success : warning ? colors.warning : muted ? colors.muted : colors.text;
+  const weight = typeof fontWeight === 'string' ? tokens.fontWeights[fontWeight as keyof typeof tokens.fontWeights] ?? fontWeight : fontWeight;
 
   return (
     <Component

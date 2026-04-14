@@ -47,3 +47,9 @@ export type { AppFooterProps } from './components/AppFooter';
 
 export { Modal } from './components/Modal';
 export type { ModalProps } from './components/Modal';
+
+export { ThemeProvider, useTheme } from './ThemeProvider';
+export type { Theme } from './ThemeProvider';
+
+export { darkTheme, lightTheme } from './themes';
+export type { ThemeColors } from './themes';

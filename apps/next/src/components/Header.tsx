@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Text } from '@superapp/ui';
+import { Text, useTheme } from '@superapp/ui';
 
 const navItems = [
   { path: '/diary', label: 'Дневник', icon: '📔' },
@@ -15,12 +15,13 @@ const navItems = [
 
 export function Header() {
   const pathname = usePathname();
+  const { tokens } = useTheme();
   const isActive = (path: string) => pathname === path || pathname?.startsWith(path + '/');
 
   return (
     <header style={{
-      borderBottom: '1px solid #333',
-      background: '#0B1020',
+      borderBottom: `1px solid ${tokens.border}`,
+      background: tokens.background,
       position: 'sticky',
       top: 0,
       zIndex: 100,
@@ -36,7 +37,7 @@ export function Header() {
         height: 56,
       }}>
         <Link href="/" style={{ textDecoration: 'none', marginRight: 16, flexShrink: 0 }}>
-          <Text fontWeight={700} size="lg" style={{ color: '#5B6CFF' }}>SuperApp</Text>
+          <Text fontWeight={700} size="lg" style={{ color: tokens.primary }}>SuperApp</Text>
         </Link>
 
         {navItems.map((item) => (
@@ -47,7 +48,7 @@ export function Header() {
               textDecoration: 'none',
               padding: '8px 12px',
               borderRadius: 8,
-              background: isActive(item.path) ? '#1e2a4a' : 'transparent',
+              background: isActive(item.path) ? tokens.surfaceActive : 'transparent',
               transition: 'background 0.15s',
               flexShrink: 0,
             }}
@@ -55,7 +56,7 @@ export function Header() {
             <Text
               size="sm"
               style={{
-                color: isActive(item.path) ? '#5B6CFF' : '#888',
+                color: isActive(item.path) ? tokens.primary : tokens.muted,
                 fontWeight: isActive(item.path) ? 600 : 400,
               }}
             >
@@ -72,7 +73,7 @@ export function Header() {
             textDecoration: 'none',
             padding: '8px 12px',
             borderRadius: 8,
-            background: isActive('/settings') ? '#1e2a4a' : 'transparent',
+            background: isActive('/settings') ? tokens.surfaceActive : 'transparent',
             transition: 'background 0.15s',
             flexShrink: 0,
           }}
@@ -80,7 +81,7 @@ export function Header() {
           <Text
             size="sm"
             style={{
-              color: isActive('/settings') ? '#5B6CFF' : '#888',
+              color: isActive('/settings') ? tokens.primary : tokens.muted,
               fontWeight: isActive('/settings') ? 600 : 400,
             }}
           >

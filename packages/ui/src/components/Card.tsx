@@ -1,4 +1,7 @@
+'use client';
+
 import { tokens } from '../tokens';
+import { useTheme } from '../ThemeProvider';
 import type { CSSProperties, ReactNode } from 'react';
 
 export interface CardProps {
@@ -12,36 +15,15 @@ export interface CardProps {
   variant?: 'default' | 'outlined' | 'elevated' | 'ghost';
 }
 
-export function Card({
-  children,
-  padding = 'lg',
-  hoverable = false,
-  clickable = false,
-  style,
-  className,
-  onClick,
-  variant = 'default',
-}: CardProps) {
+export function Card({ children, padding = 'lg', hoverable = false, clickable = false, style, className, onClick, variant = 'default' }: CardProps) {
+  const { tokens: colors } = useTheme();
   const paddingValue = typeof padding === 'string' ? tokens.space[padding as keyof typeof tokens.space] ?? padding : padding;
 
   const variantStyles: Record<string, CSSProperties> = {
-    default: {
-      background: tokens.colors.surface,
-      borderColor: tokens.colors.border,
-    },
-    outlined: {
-      background: 'transparent',
-      borderColor: tokens.colors.borderHover,
-    },
-    elevated: {
-      background: tokens.colors.surface,
-      borderColor: tokens.colors.border,
-      boxShadow: tokens.shadows.md,
-    },
-    ghost: {
-      background: 'transparent',
-      border: 'none',
-    },
+    default: { background: colors.surface, borderColor: colors.border },
+    outlined: { background: 'transparent', borderColor: colors.borderHover },
+    elevated: { background: colors.surface, borderColor: colors.border, boxShadow: tokens.shadows.md },
+    ghost: { background: 'transparent', border: 'none' },
   };
 
   const v = variantStyles[variant];
@@ -64,17 +46,17 @@ export function Card({
       }}
       onMouseEnter={(e) => {
         if (hoverable) {
-          (e.currentTarget as HTMLElement).style.borderColor = tokens.colors.borderFocus;
+          (e.currentTarget as HTMLElement).style.borderColor = colors.borderFocus;
           (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
           (e.currentTarget as HTMLElement).style.boxShadow = tokens.shadows.lg;
         }
         if (clickable || onClick) {
-          (e.currentTarget as HTMLElement).style.background = tokens.colors.surfaceHover;
+          (e.currentTarget as HTMLElement).style.background = colors.surfaceHover;
         }
       }}
       onMouseLeave={(e) => {
         if (hoverable) {
-          (e.currentTarget as HTMLElement).style.borderColor = tokens.colors.border;
+          (e.currentTarget as HTMLElement).style.borderColor = colors.border;
           (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
           (e.currentTarget as HTMLElement).style.boxShadow = v.boxShadow ?? 'none';
         }

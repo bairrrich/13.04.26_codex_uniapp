@@ -1,3 +1,6 @@
+'use client';
+
+import { useTheme } from '../ThemeProvider';
 import { tokens } from '../tokens';
 import type { CSSProperties, ReactNode } from 'react';
 
@@ -18,6 +21,8 @@ export function Sidebar({
   style,
   className,
 }: SidebarProps) {
+  const { tokens: themeTokens } = useTheme();
+
   return (
     <aside
       className={className}
@@ -27,8 +32,8 @@ export function Sidebar({
         height: '100vh',
         position: 'sticky',
         top: 0,
-        background: tokens.colors.backgroundSecondary,
-        borderRight: `1px solid ${tokens.colors.border}`,
+        background: themeTokens.backgroundSecondary,
+        borderRight: `1px solid ${themeTokens.border}`,
         display: 'flex',
         flexDirection: 'column',
         transition: `width ${tokens.transitions.base}`,
@@ -49,6 +54,8 @@ export interface SidebarSectionProps {
 }
 
 export function SidebarSection({ children, title, style, className }: SidebarSectionProps) {
+  const { tokens: themeTokens } = useTheme();
+
   return (
     <div className={className} style={{ padding: '12px 0', ...style }}>
       {title && (
@@ -56,7 +63,7 @@ export function SidebarSection({ children, title, style, className }: SidebarSec
           padding: '0 16px',
           fontSize: tokens.fontSizes.xs,
           fontWeight: tokens.fontWeights.semibold,
-          color: tokens.colors.muted,
+          color: themeTokens.muted,
           textTransform: 'uppercase',
           letterSpacing: '0.05em',
           marginBottom: 8,
@@ -90,6 +97,8 @@ export function SidebarItem({
   style,
   className,
 }: SidebarItemProps) {
+  const { tokens: themeTokens } = useTheme();
+
   const content = (
     <div
       onClick={onClick}
@@ -101,8 +110,8 @@ export function SidebarItem({
         margin: '2px 8px',
         borderRadius: tokens.radius.md,
         cursor: 'pointer',
-        background: active ? tokens.colors.surfaceActive : 'transparent',
-        color: active ? tokens.colors.primary : tokens.colors.textSecondary,
+        background: active ? themeTokens.surfaceActive : 'transparent',
+        color: active ? themeTokens.primary : themeTokens.textSecondary,
         transition: `all ${tokens.transitions.fast}`,
         textDecoration: 'none',
         position: 'relative',
@@ -110,14 +119,14 @@ export function SidebarItem({
       }}
       onMouseEnter={(e) => {
         if (!active) {
-          (e.currentTarget as HTMLElement).style.background = tokens.colors.surfaceHover;
-          (e.currentTarget as HTMLElement).style.color = tokens.colors.text;
+          (e.currentTarget as HTMLElement).style.background = themeTokens.surfaceHover;
+          (e.currentTarget as HTMLElement).style.color = themeTokens.text;
         }
       }}
       onMouseLeave={(e) => {
         if (!active) {
-          (e.currentTarget as HTMLElement).style.background = active ? tokens.colors.surfaceActive : 'transparent';
-          (e.currentTarget as HTMLElement).style.color = active ? tokens.colors.primary : tokens.colors.textSecondary;
+          (e.currentTarget as HTMLElement).style.background = active ? themeTokens.surfaceActive : 'transparent';
+          (e.currentTarget as HTMLElement).style.color = active ? themeTokens.primary : themeTokens.textSecondary;
         }
       }}
     >
@@ -127,8 +136,8 @@ export function SidebarItem({
       </span>
       {badge && (
         <span style={{
-          background: tokens.colors.primary,
-          color: '#fff',
+          background: themeTokens.primary,
+          color: themeTokens.text,
           fontSize: tokens.fontSizes.xs,
           fontWeight: tokens.fontWeights.semibold,
           padding: '2px 6px',
@@ -160,11 +169,13 @@ export interface SidebarFooterProps {
 }
 
 export function SidebarFooter({ children, style, className }: SidebarFooterProps) {
+  const { tokens: themeTokens } = useTheme();
+
   return (
     <div className={className} style={{
       marginTop: 'auto',
       padding: 16,
-      borderTop: `1px solid ${tokens.colors.border}`,
+      borderTop: `1px solid ${themeTokens.border}`,
       ...style,
     }}>
       {children}

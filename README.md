@@ -12,13 +12,58 @@ pnpm build        # production build
 - Env переменные: `apps/next/.env.example`
 - Деплой: Vercel (Root Directory = `apps/next`)
 
-## Status (All Core Modules Implemented ✅)
+## Status (Production-Ready Core ✅)
 
 - ✅ **Iteration A** — Foundation: Turborepo, pnpm workspaces, TypeScript
 - ✅ **Iteration B** — Data & Auth: Drizzle ORM schema, Supabase Auth, ErrorBoundary, Logger
-- ✅ **Iteration C** — Core Features: Diary, Finance, Nutrition, Fitness (full CRUD)
-- ✅ **Iteration D** — Feed + Social + Collections: Activity Feed, Collections (books/movies/recipes/supplements)
+- ✅ **Iteration C** — Core Features: Diary, Finance (9 tabs), Nutrition (3 tabs), Fitness
+- ✅ **Iteration D** — Feed + Social + Collections: Activity Feed, Collections
+- ✅ **UI System** — @superapp/ui: Button, Input, Card, Text, Heading, Modal, Select, TextArea, Badge, Skeleton, Avatar, Sidebar, AppHeader, AppFooter
+- ✅ **Responsive** — Mobile sidebar overlay, adaptive grids
 - ⬜ **Iteration E** — Reliability: Background jobs, tests, SLA
+
+## 3) Модули (актуальный статус)
+
+### 💰 Финансы (9 вкладок)
+
+| Вкладка | Описание |
+|---------|----------|
+| Обзор | Сводка баланса, быстрые действия, последние операции |
+| Счета | CRUD счетов (RUB/USD/EUR), общий баланс |
+| Транзакции | Доходы/расходы/переводы, фильтры, экспорт CSV, быстрые суммы |
+| Категории | CRUD категорий с иконками и цветами (12 шт) |
+| Бюджеты | Лимиты по категориям, прогресс-бары, предупреждения |
+| Цели | Финансовые цели с прогрессом, пополнение, иконки/цвета |
+| Инвестиции | Акции/облигации/ETF/крипта, позиции |
+| Повторения | Автоматические транзакции с расписанием |
+| Аналитика | Pie chart расходов, breakdown по категориям, тренды |
+
+### 🍽️ Питание (3 вкладки)
+
+| Вкладка | Описание |
+|---------|----------|
+| 📅 День | Кольца макро, поиск продуктов (live), порции, вода, приёмы пищи |
+| 📖 Рецепты | CRUD рецептов с временем и порциями |
+| 📊 Статистика | Pie chart макро, итоги за неделю, среднее в день |
+
+### 📔 Дневник
+- CRUD записей с настроением (1-5 эмодзи)
+- Поиск, редактирование inline, график настроения
+
+### 🏋️ Фитнес
+- Тренировки с упражнениями, подходы, вес, отдых
+
+### 📚 Коллекции
+- Книги, фильмы, рецепты, добавки с рейтингами и статусами
+
+### 📰 Лента
+- Посты и события активности
+
+### 🏠 Главная
+- Dashboard со статистикой, быстрые действия
+
+### ⚙️ Настройки
+- Профиль, email, timezone, выход
 
 ## 1) Цели и нефункциональные требования
 

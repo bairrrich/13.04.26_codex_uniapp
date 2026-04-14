@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   AppHeader, AppFooter,
-  Avatar, Text
+  Avatar, Text, type ThemeColors
 } from '@superapp/ui';
 import { tokens } from '@superapp/ui';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useTheme } from '@superapp/ui';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -33,6 +34,7 @@ const SIDEBAR_COLLAPSED = 72;
 export function AppLayout({ children, headerTitle, headerSubtitle, headerRight }: AppLayoutProps) {
   const pathname = usePathname();
   const isMobile = useIsMobile(768);
+  const { theme, tokens: themeColors } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -119,32 +121,32 @@ export function AppLayout({ children, headerTitle, headerSubtitle, headerRight }
 
   // Desktop
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: tokens.colors.background }}>
-      <DesktopSidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} activePath={pathname} isActive={isActive} items={navItems} />
+    <div style={{ display: 'flex', minHeight: '100vh', background: themeColors.background, color: themeColors.text }}>
+      <DesktopSidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} activePath={pathname} isActive={isActive} items={navItems} themeColors={themeColors} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <AppHeader title={headerTitle} subtitle={headerSubtitle} rightContent={headerRight} />
-        <main style={{ flex: 1, padding: 24, overflowY: 'auto' }}>{children}</main>
+        <main style={{ flex: 1, padding: 24, overflowY: 'auto', background: themeColors.background, color: themeColors.text }}>{children}</main>
         <AppFooter />
       </div>
     </div>
   );
 }
 
-function DesktopSidebar({ collapsed, onToggle, isActive, items }: { collapsed: boolean; onToggle: () => void; activePath: string; isActive: (href: string) => boolean; items: typeof navItems }) {
+function DesktopSidebar({ collapsed, onToggle, isActive, items, themeColors: tc }: { collapsed: boolean; onToggle: () => void; activePath: string; isActive: (href: string) => boolean; items: typeof navItems; themeColors: ThemeColors }) {
   return (
-    <aside style={{ width: collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_WIDTH, minWidth: collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_WIDTH, height: '100vh', position: 'sticky', top: 0, background: tokens.colors.backgroundSecondary, borderRight: `1px solid ${tokens.colors.border}`, display: 'flex', flexDirection: 'column', transition: `all ${tokens.transitions.base}`, overflow: 'hidden', zIndex: 50 }}>
+    <aside style={{ width: collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_WIDTH, minWidth: collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_WIDTH, height: '100vh', position: 'sticky', top: 0, background: tc.backgroundSecondary, borderRight: `1px solid ${tc.border}`, display: 'flex', flexDirection: 'column', transition: `all ${tokens.transitions.base}`, overflow: 'hidden', zIndex: 50 }}>
       {/* Logo */}
       <div style={{ padding: collapsed ? '16px 0' : '16px 16px 12px', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', gap: 10 }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10, flex: 1, justifyContent: collapsed ? 'center' : 'flex-start' }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg, ${tokens.colors.primary}, ${tokens.colors.success})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff', flexShrink: 0, boxShadow: `0 4px 12px ${tokens.colors.primary}40` }}>S</div>
-          {!collapsed && <span style={{ fontSize: tokens.fontSizes.lg, fontWeight: tokens.fontWeights.bold, color: tokens.colors.text, letterSpacing: '-0.02em' }}>SuperApp</span>}
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg, ${tc.primary}, ${tc.success})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff', flexShrink: 0, boxShadow: `0 4px 12px ${tc.primary}40` }}>S</div>
+          {!collapsed && <span style={{ fontSize: tokens.fontSizes.lg, fontWeight: tokens.fontWeights.bold, color: tc.text, letterSpacing: '-0.02em' }}>SuperApp</span>}
         </Link>
       </div>
 
       {/* Items */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
         {items.map((item) => (
-          <DesktopSidebarItem key={item.href} icon={item.icon} label={item.section} href={item.href} active={isActive(item.href)} collapsed={collapsed} />
+          <DesktopSidebarItem key={item.href} icon={item.icon} label={item.section} href={item.href} active={isActive(item.href)} collapsed={collapsed} themeColors={tc} />
         ))}
       </div>
 
@@ -171,7 +173,7 @@ function DesktopSidebar({ collapsed, onToggle, isActive, items }: { collapsed: b
   );
 }
 
-function DesktopSidebarItem({ icon, label, href, active, collapsed }: { icon: string; label: string; href: string; active: boolean; collapsed: boolean }) {
+function DesktopSidebarItem({ icon, label, href, active, collapsed, themeColors: tc }: { icon: string; label: string; href: string; active: boolean; collapsed: boolean; themeColors: ThemeColors }) {
   const [hovered, setHovered] = useState(false);
   const [tooltipTop, setTooltipTop] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
@@ -188,16 +190,16 @@ function DesktopSidebarItem({ icon, label, href, active, collapsed }: { icon: st
     <Link href={href} style={{ textDecoration: 'none', position: 'relative' }}>
       <div
         ref={ref}
-        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: collapsed ? '10px 0' : '10px 12px', margin: '2px 8px', borderRadius: tokens.radius.md, background: active ? tokens.colors.primaryLight : hovered ? tokens.colors.surfaceHover : 'transparent', color: active ? tokens.colors.primary : tokens.colors.textSecondary, justifyContent: collapsed ? 'center' : 'flex-start', transition: `all ${tokens.transitions.fast}` }}
+        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: collapsed ? '10px 0' : '10px 12px', margin: '2px 8px', borderRadius: tokens.radius.md, background: active ? tc.primaryLight : hovered ? tc.surfaceHover : 'transparent', color: active ? tc.primary : tc.textSecondary, justifyContent: collapsed ? 'center' : 'flex-start', transition: `all ${tokens.transitions.fast}` }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={() => setHovered(false)}
       >
-        {active && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: '60%', borderRadius: '0 2px 2px 0', background: tokens.colors.primary }} />}
+        {active && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: '60%', borderRadius: '0 2px 2px 0', background: tc.primary }} />}
         <span style={{ fontSize: 20, flexShrink: 0, width: 28, textAlign: 'center', transition: `transform ${tokens.transitions.fast}`, transform: hovered && !active ? 'scale(1.1)' : 'scale(1)' }}>{icon}</span>
-        {!collapsed && <span style={{ fontSize: tokens.fontSizes.sm, fontWeight: active ? tokens.fontWeights.semibold : tokens.fontWeights.medium, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>}
+        {!collapsed && <span style={{ fontSize: tokens.fontSizes.sm, fontWeight: active ? tokens.fontWeights.semibold : tokens.fontWeights.medium, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: tc.text }}>{label}</span>}
       </div>
       {collapsed && hovered && (
-        <div style={{ position: 'fixed', left: SIDEBAR_COLLAPSED + 8, top: tooltipTop, transform: 'translateY(-50%)', padding: '6px 12px', borderRadius: tokens.radius.md, background: tokens.colors.surface, border: `1px solid ${tokens.colors.border}`, boxShadow: tokens.shadows.md, whiteSpace: 'nowrap', fontSize: tokens.fontSizes.sm, color: active ? tokens.colors.primary : tokens.colors.text, fontWeight: active ? tokens.fontWeights.semibold : tokens.fontWeights.normal, pointerEvents: 'none', zIndex: 9999, animation: 'fadeIn 0.15s ease-out' }}>{label}</div>
+        <div style={{ position: 'fixed', left: SIDEBAR_COLLAPSED + 8, top: tooltipTop, transform: 'translateY(-50%)', padding: '6px 12px', borderRadius: tokens.radius.md, background: tc.surface, border: `1px solid ${tc.border}`, boxShadow: tokens.shadows.md, whiteSpace: 'nowrap', fontSize: tokens.fontSizes.sm, color: active ? tc.primary : tc.text, fontWeight: active ? tokens.fontWeights.semibold : tokens.fontWeights.normal, pointerEvents: 'none', zIndex: 9999, animation: 'fadeIn 0.15s ease-out' }}>{label}</div>
       )}
     </Link>
   );
