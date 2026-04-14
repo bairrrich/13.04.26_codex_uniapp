@@ -245,9 +245,14 @@ create index if not exists idx_meal_logs_user_eaten_at
 create table if not exists meal_items (
   id uuid primary key default gen_random_uuid(),
   meal_log_id uuid not null references meal_logs(id) on delete cascade,
-  food_item_id uuid not null references food_items(id) on delete restrict,
+  food_item_id uuid references food_items(id) on delete restrict,
   grams numeric(8,1) not null,
   name text, -- for custom items not in food_items
+  calories numeric(8,1),
+  protein_g numeric(5,1),
+  fat_g numeric(5,1),
+  carbs_g numeric(5,1),
+  fiber_g numeric(5,1),
   created_at timestamptz not null default now()
 );
 

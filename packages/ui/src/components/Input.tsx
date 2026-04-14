@@ -23,6 +23,7 @@ export interface InputProps {
   step?: string | number;
   min?: string | number;
   max?: string | number;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
 export function Input({
@@ -47,6 +48,7 @@ export function Input({
   step,
   min,
   max,
+  onKeyDown,
 }: InputProps) {
   const baseStyle: CSSProperties = {
     width: fullWidth ? '100%' : undefined,
@@ -99,6 +101,7 @@ export function Input({
         step={step}
         min={min}
         max={max}
+        onKeyDown={onKeyDown}
         className={className}
         style={baseStyle}
         onFocus={(e) => {
