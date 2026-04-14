@@ -5,12 +5,13 @@ import { DiaryEntryList } from '../../src/features/diary/components/DiaryEntryLi
 import { DiaryEntryForm } from '../../src/features/diary/components/DiaryEntryForm';
 import { MoodChart } from '../../src/features/diary/components/MoodChart';
 import { diaryService, type DiaryEntry } from '../../src/features/diary/services/diaryService';
-import { Card, Text, Button } from '@superapp/ui';
+import { Card, Text, Button, useTheme } from '@superapp/ui';
 import { AppLayout } from '../../src/components/AppLayout';
 
 const PAGE_SIZE = 10;
 
 export default function DiaryPage() {
+  const { tokens: c } = useTheme();
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +60,7 @@ export default function DiaryPage() {
       headerTitle="📔 Дневник"
       headerSubtitle={`${totalCount} записей`}
       headerRight={
-        <Button variant="primary" size="lg" onPress={() => setShowForm(!showForm)}>
+        <Button variant="primary" size="sm" onPress={() => setShowForm(!showForm)}>
           {showForm ? '✕ Закрыть' : '✏️ Новая запись'}
         </Button>
       }
@@ -84,8 +85,14 @@ export default function DiaryPage() {
 
       {/* Error State */}
       {error && (
-        <Card padding="lg" style={{ marginBottom: 16, borderColor: '#ef4444' }}>
-          <Text error>{error}</Text>
+        <Card padding="lg" style={{ marginBottom: 16, borderColor: c.error }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+            <Text error>⚠️ {error}</Text>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button variant="ghost" size="sm" onPress={() => { setError(null); fetchEntries(0); }}>🔄 Повторить</Button>
+              <Button variant="ghost" size="sm" onPress={() => setError(null)}>✕</Button>
+            </div>
+          </div>
         </Card>
       )}
 

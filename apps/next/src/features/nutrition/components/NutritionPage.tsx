@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, Text, Badge, Skeleton, Button, Modal, Input, Select, TextArea } from '@superapp/ui';
+import { Card, Text, Badge, Skeleton, Button, Modal, Input, Select, TextArea, useTheme } from '@superapp/ui';
 import { tokens } from '@superapp/ui';
 import {
   getDailyNutrition,
@@ -19,10 +19,10 @@ import {
 import { useState, useEffect, useCallback } from 'react';
 
 const MEAL_TYPES = [
-  { value: 'breakfast', label: '🌅 Завтрак', color: '#f59e0b' },
-  { value: 'lunch', label: '☀️ Обед', color: '#22c55e' },
-  { value: 'dinner', label: '🌙 Ужин', color: '#3b82f6' },
-  { value: 'snack', label: '🍎 Перекус', color: '#8b5cf6' },
+  { value: 'breakfast', label: '🌅 Завтрак' },
+  { value: 'lunch', label: '☀️ Обед' },
+  { value: 'dinner', label: '🌙 Ужин' },
+  { value: 'snack', label: '🍎 Перекус' },
 ] as const;
 
 const QUICK_WATER = [150, 250, 350, 500];
@@ -32,6 +32,7 @@ const QUICK_WATER = [150, 250, 350, 500];
 // ============================================================
 
 function WeeklyChart({ data, goal }: { data: { date: string; dayName: string; calories: number }[]; goal: number }) {
+  const { tokens: c } = useTheme();
   const maxCal = Math.max(...data.map((d) => d.calories), goal, 1);
   return (
     <Card padding="lg">
@@ -50,21 +51,21 @@ function WeeklyChart({ data, goal }: { data: { date: string; dayName: string; ca
                 width: '100%',
                 height: Math.max(pct * 1.2, 2),
                 borderRadius: 4,
-                background: isOver ? tokens.colors.error : isToday ? tokens.colors.primary : tokens.colors.warning,
+                background: isOver ? c.error : isToday ? c.primary : c.warning,
                 transition: 'height 0.3s',
                 minHeight: day.calories > 0 ? 8 : 4,
                 opacity: day.calories === 0 ? 0.2 : 1,
               }}
                 title={`${day.calories} ккал`}
               />
-              <Text muted size="xs" style={{ fontWeight: isToday ? tokens.fontWeights.bold : tokens.fontWeights.normal, color: isToday ? tokens.colors.primary : tokens.colors.muted }}>{day.dayName}</Text>
+              <Text muted size="xs" style={{ fontWeight: isToday ? tokens.fontWeights.bold : tokens.fontWeights.normal, color: isToday ? c.primary : c.muted }}>{day.dayName}</Text>
             </div>
           );
         })}
       </div>
       {/* Goal line */}
       <div style={{ position: 'relative', height: 2, marginTop: -2 }}>
-        <div style={{ position: 'absolute', left: 0, right: 0, height: 2, background: tokens.colors.success, borderRadius: 1, opacity: 0.4 }} />
+        <div style={{ position: 'absolute', left: 0, right: 0, height: 2, background: c.success, borderRadius: 1, opacity: 0.4 }} />
       </div>
       <Text muted size="xs" style={{ marginTop: 4 }}>Цель: {goal} ккал</Text>
     </Card>
@@ -78,6 +79,7 @@ function WeeklyChart({ data, goal }: { data: { date: string; dayName: string; ca
 function MacroRing({ label, current, target, unit, color, icon }: {
   label: string; current: number; target: number; unit: string; color: string; icon: string;
 }) {
+  const { tokens: c } = useTheme();
   const pct = target > 0 ? Math.min((current / target) * 100, 100) : 0;
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
@@ -88,10 +90,10 @@ function MacroRing({ label, current, target, unit, color, icon }: {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
       <div style={{ position: 'relative', width: 96, height: 96 }}>
         <svg width="96" height="96" viewBox="0 0 96 96">
-          <circle cx="48" cy="48" r={radius} fill="none" stroke={tokens.colors.border} strokeWidth="6" />
+          <circle cx="48" cy="48" r={radius} fill="none" stroke={c.border} strokeWidth="6" />
           <circle
             cx="48" cy="48" r={radius} fill="none"
-            stroke={isOver ? tokens.colors.error : color}
+            stroke={isOver ? c.error : color}
             strokeWidth="6"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
@@ -120,6 +122,7 @@ function MealAddModal({ isOpen, onClose, mealType, mealLogId, onAdded }: {
   isOpen: boolean; onClose: () => void; mealType: string; mealLogId: string | null;
   onAdded: () => void;
 }) {
+  const { tokens: c } = useTheme();
   const [mode, setMode] = useState<'search' | 'custom'>('search');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
@@ -241,7 +244,7 @@ function MealAddModal({ isOpen, onClose, mealType, mealLogId, onAdded }: {
 
             {/* Selected food preview + portion */}
             {selectedFood && (
-              <Card padding="lg" style={{ background: tokens.colors.surfaceActive, border: `1px solid ${tokens.colors.primary}` }}>
+              <Card padding="lg" style={{ background: c.surfaceActive, border: `1px solid ${c.primary}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                   <div style={{ flex: 1 }}>
                     <Text fontWeight="semibold" size="lg">{selectedFood.name}</Text>
@@ -252,20 +255,20 @@ function MealAddModal({ isOpen, onClose, mealType, mealLogId, onAdded }: {
 
                 {/* Nutrition per portion */}
                 <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                  <div style={{ flex: 1, padding: '8px 0', textAlign: 'center', borderRadius: 8, background: tokens.colors.surfaceHover }}>
-                    <Text fontWeight="bold" size="lg" style={{ color: tokens.colors.warning }}>{computedNutrition?.calories}</Text>
+                  <div style={{ flex: 1, padding: '8px 0', textAlign: 'center', borderRadius: 8, background: c.surfaceHover }}>
+                    <Text fontWeight="bold" size="lg" style={{ color: c.warning }}>{computedNutrition?.calories}</Text>
                     <Text muted size="xs">ккал</Text>
                   </div>
-                  <div style={{ flex: 1, padding: '8px 0', textAlign: 'center', borderRadius: 8, background: tokens.colors.surfaceHover }}>
-                    <Text fontWeight="bold" size="lg" style={{ color: tokens.colors.success }}>{computedNutrition?.protein}г</Text>
+                  <div style={{ flex: 1, padding: '8px 0', textAlign: 'center', borderRadius: 8, background: c.surfaceHover }}>
+                    <Text fontWeight="bold" size="lg" style={{ color: c.success }}>{computedNutrition?.protein}г</Text>
                     <Text muted size="xs">белки</Text>
                   </div>
-                  <div style={{ flex: 1, padding: '8px 0', textAlign: 'center', borderRadius: 8, background: tokens.colors.surfaceHover }}>
-                    <Text fontWeight="bold" size="lg" style={{ color: tokens.colors.error }}>{computedNutrition?.fat}г</Text>
+                  <div style={{ flex: 1, padding: '8px 0', textAlign: 'center', borderRadius: 8, background: c.surfaceHover }}>
+                    <Text fontWeight="bold" size="lg" style={{ color: c.error }}>{computedNutrition?.fat}г</Text>
                     <Text muted size="xs">жиры</Text>
                   </div>
-                  <div style={{ flex: 1, padding: '8px 0', textAlign: 'center', borderRadius: 8, background: tokens.colors.surfaceHover }}>
-                    <Text fontWeight="bold" size="lg" style={{ color: tokens.colors.info }}>{computedNutrition?.carbs}г</Text>
+                  <div style={{ flex: 1, padding: '8px 0', textAlign: 'center', borderRadius: 8, background: c.surfaceHover }}>
+                    <Text fontWeight="bold" size="lg" style={{ color: c.info }}>{computedNutrition?.carbs}г</Text>
                     <Text muted size="xs">углеводы</Text>
                   </div>
                 </div>
@@ -302,19 +305,19 @@ function MealAddModal({ isOpen, onClose, mealType, mealLogId, onAdded }: {
                       padding: '10px 12px',
                       borderRadius: 8,
                       border: '1px solid transparent',
-                      background: tokens.colors.surfaceHover,
+                      background: c.surfaceHover,
                       cursor: 'pointer',
                       transition: 'all 0.15s',
                       textAlign: 'left',
                       fontFamily: 'inherit',
                     }}
                     onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.borderColor = tokens.colors.primary;
-                      (e.currentTarget as HTMLElement).style.background = tokens.colors.surfaceActive;
+                      (e.currentTarget as HTMLElement).style.borderColor = c.primary;
+                      (e.currentTarget as HTMLElement).style.background = c.surfaceActive;
                     }}
                     onMouseLeave={(e) => {
                       (e.currentTarget as HTMLElement).style.borderColor = 'transparent';
-                      (e.currentTarget as HTMLElement).style.background = tokens.colors.surfaceHover;
+                      (e.currentTarget as HTMLElement).style.background = c.surfaceHover;
                     }}
                   >
                     <div>
@@ -383,6 +386,7 @@ function MealAddModal({ isOpen, onClose, mealType, mealLogId, onAdded }: {
 function WaterTracker({ total, goal, onAdd, onRefresh }: {
   total: number; goal: number; onAdd: (ml: number) => void; onRefresh: () => void;
 }) {
+  const { tokens: c } = useTheme();
   const pct = goal > 0 ? Math.min((total / goal) * 100, 100) : 0;
   return (
     <Card padding="lg">
@@ -390,8 +394,8 @@ function WaterTracker({ total, goal, onAdd, onRefresh }: {
         <Text fontWeight="semibold" size="lg">💧 Вода</Text>
         <Badge variant={pct >= 100 ? 'success' : 'primary'}>{total} / {goal} мл</Badge>
       </div>
-      <div style={{ height: 10, borderRadius: 5, background: tokens.colors.border, overflow: 'hidden', marginBottom: 12 }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: pct >= 100 ? tokens.colors.success : tokens.colors.info, borderRadius: 5, transition: 'width 0.3s' }} />
+      <div style={{ height: 10, borderRadius: 5, background: c.border, overflow: 'hidden', marginBottom: 12 }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: pct >= 100 ? c.success : c.info, borderRadius: 5, transition: 'width 0.3s' }} />
       </div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {QUICK_WATER.map((ml) => (
@@ -410,6 +414,7 @@ function GoalsModal({ isOpen, onClose, goal, onSaved }: {
   isOpen: boolean; onClose: () => void; goal: NutritionGoal | null;
   onSaved: () => void;
 }) {
+  const { tokens: c } = useTheme();
   const [calories, setCalories] = useState(String(goal?.calories || 2000));
   const [protein, setProtein] = useState(String(goal?.protein_g || 150));
   const [fat, setFat] = useState(String(goal?.fat_g || 65));
@@ -481,6 +486,7 @@ function GoalsModal({ isOpen, onClose, goal, onSaved }: {
 // ============================================================
 
 function StatsTab({ nutrition, weeklyData }: { nutrition: any; weeklyData: any[] }) {
+  const { tokens: c } = useTheme();
   const consumed = nutrition?.consumed || { calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0 };
   const goal = nutrition?.goal;
   const total = consumed.calories + consumed.protein_g * 4 + consumed.fat_g * 9 + consumed.carbs_g * 4;
@@ -494,9 +500,9 @@ function StatsTab({ nutrition, weeklyData }: { nutrition: any; weeklyData: any[]
           <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
             <MacroPie protein={consumed.protein_g} fat={consumed.fat_g} carbs={consumed.carbs_g} />
             <div style={{ flex: 1, minWidth: 200 }}>
-              <MacroLegend label="Белки" grams={consumed.protein_g} calPerGram={4} color={tokens.colors.success} />
-              <MacroLegend label="Жиры" grams={consumed.fat_g} calPerGram={9} color={tokens.colors.error} />
-              <MacroLegend label="Углеводы" grams={consumed.carbs_g} calPerGram={4} color={tokens.colors.info} />
+              <MacroLegend label="Белки" grams={consumed.protein_g} calPerGram={4} color={c.success} />
+              <MacroLegend label="Жиры" grams={consumed.fat_g} calPerGram={9} color={c.error} />
+              <MacroLegend label="Углеводы" grams={consumed.carbs_g} calPerGram={4} color={c.info} />
             </div>
           </div>
         </Card>
@@ -538,6 +544,7 @@ function StatsTab({ nutrition, weeklyData }: { nutrition: any; weeklyData: any[]
 }
 
 function MacroPie({ protein, fat, carbs }: { protein: number; fat: number; carbs: number }) {
+  const { tokens: c } = useTheme();
   const pCal = protein * 4;
   const fCal = fat * 9;
   const cCal = carbs * 4;
@@ -549,23 +556,24 @@ function MacroPie({ protein, fat, carbs }: { protein: number; fat: number; carbs
 
   return (
     <svg width="120" height="120" viewBox="0 0 120 120">
-      <circle cx="60" cy="60" r="50" fill="none" stroke={tokens.colors.border} strokeWidth="16" />
-      <circle cx="60" cy="60" r="50" fill="none" stroke={tokens.colors.success} strokeWidth="16"
+      <circle cx="60" cy="60" r="50" fill="none" stroke={c.border} strokeWidth="16" />
+      <circle cx="60" cy="60" r="50" fill="none" stroke={c.success} strokeWidth="16"
         strokeDasharray={`${pPct * 314} ${314 - pPct * 314}`} transform="rotate(-90 60 60)" />
-      <circle cx="60" cy="60" r="50" fill="none" stroke={tokens.colors.error} strokeWidth="16"
+      <circle cx="60" cy="60" r="50" fill="none" stroke={c.error} strokeWidth="16"
         strokeDasharray={`${fPct * 314} ${314 - fPct * 314}`} strokeDashoffset={`-${pPct * 314}`} transform="rotate(-90 60 60)" />
-      <circle cx="60" cy="60" r="50" fill="none" stroke={tokens.colors.info} strokeWidth="16"
+      <circle cx="60" cy="60" r="50" fill="none" stroke={c.info} strokeWidth="16"
         strokeDasharray={`${(1 - pPct - fPct) * 314} ${314 - (1 - pPct - fPct) * 314}`} strokeDashoffset={`-${(pPct + fPct) * 314}`} transform="rotate(-90 60 60)" />
-      <text x="60" y="56" textAnchor="middle" fill={tokens.colors.text} fontSize="14" fontWeight="bold">{Math.round(total)}</text>
-      <text x="60" y="72" textAnchor="middle" fill={tokens.colors.muted} fontSize="10">ккал</text>
+      <text x="60" y="56" textAnchor="middle" fill={c.text} fontSize="14" fontWeight="bold">{Math.round(total)}</text>
+      <text x="60" y="72" textAnchor="middle" fill={c.muted} fontSize="10">ккал</text>
     </svg>
   );
 }
 
 function MacroLegend({ label, grams, calPerGram, color }: { label: string; grams: number; calPerGram: number; color: string }) {
+  const { tokens: c } = useTheme();
   const cal = Math.round(grams * calPerGram);
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid ${tokens.colors.border}` }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid ${c.border}` }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ width: 12, height: 12, borderRadius: 2, background: color }} />
         <Text size="sm">{label}</Text>
@@ -578,8 +586,9 @@ function MacroLegend({ label, grams, calPerGram, color }: { label: string; grams
 }
 
 function StatBox({ label, value, unit }: { label: string; value: string; unit: string }) {
+  const { tokens: c } = useTheme();
   return (
-    <div style={{ padding: 12, borderRadius: 8, background: tokens.colors.surfaceHover, textAlign: 'center' }}>
+    <div style={{ padding: 12, borderRadius: 8, background: c.surfaceHover, textAlign: 'center' }}>
       <Text muted size="xs">{label}</Text>
       <Text size="lg" fontWeight="bold" as="span">{value} <Text muted size="xs" as="span">{unit}</Text></Text>
     </div>
@@ -721,6 +730,7 @@ const NUTRITION_TABS = [
 type NutritionTab = typeof NUTRITION_TABS[number]['id'];
 
 export function NutritionPage() {
+  const { tokens: c } = useTheme();
   const [activeTab, setActiveTab] = useState<NutritionTab>('daily');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [nutrition, setNutrition] = useState<Awaited<ReturnType<typeof getDailyNutrition>> | null>(null);
@@ -802,25 +812,14 @@ export function NutritionPage() {
       {/* Internal tabs */}
       <div style={{ display: 'flex', gap: 4, overflowX: 'auto', paddingBottom: 8 }}>
         {NUTRITION_TABS.map((tab) => (
-          <button
+          <Button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              padding: '8px 16px',
-              fontSize: tokens.fontSizes.sm,
-              fontWeight: activeTab === tab.id ? tokens.fontWeights.semibold : tokens.fontWeights.medium,
-              color: activeTab === tab.id ? tokens.colors.primary : tokens.colors.textSecondary,
-              backgroundColor: activeTab === tab.id ? tokens.colors.primaryLight : 'transparent',
-              border: `1px solid ${activeTab === tab.id ? tokens.colors.primary : tokens.colors.border}`,
-              borderRadius: tokens.radius.md,
-              cursor: 'pointer',
-              transition: `all ${tokens.transitions.fast}`,
-              fontFamily: 'inherit',
-              whiteSpace: 'nowrap',
-            }}
+            variant={activeTab === tab.id ? 'primary' : 'secondary'}
+            size="sm"
+            onPress={() => setActiveTab(tab.id)}
           >
             {tab.label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -838,7 +837,7 @@ export function NutritionPage() {
 
           {/* Error banner */}
           {error && (
-            <Card padding="lg" style={{ borderColor: tokens.colors.error }}>
+            <Card padding="lg" style={{ borderColor: c.error }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text error>⚠️ {error}</Text>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -856,10 +855,10 @@ export function NutritionPage() {
               <Card padding="lg">
                 <Text fontWeight="semibold" size="lg" style={{ marginBottom: 16 }}>🎯 Дневные цели</Text>
                 <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: 16 }}>
-                  <MacroRing label="Калории" current={consumed.calories} target={goal.calories} unit="" color={tokens.colors.warning} icon="🔥" />
-                  <MacroRing label="Белки" current={consumed.protein_g} target={goal.protein_g} unit="г" color={tokens.colors.success} icon="🥩" />
-                  <MacroRing label="Жиры" current={consumed.fat_g} target={goal.fat_g} unit="г" color={tokens.colors.error} icon="🧈" />
-                  <MacroRing label="Углеводы" current={consumed.carbs_g} target={goal.carbs_g} unit="г" color={tokens.colors.info} icon="🍞" />
+                  <MacroRing label="Калории" current={consumed.calories} target={goal.calories} unit="" color={c.warning} icon="🔥" />
+                  <MacroRing label="Белки" current={consumed.protein_g} target={goal.protein_g} unit="г" color={c.success} icon="🥩" />
+                  <MacroRing label="Жиры" current={consumed.fat_g} target={goal.fat_g} unit="г" color={c.error} icon="🧈" />
+                  <MacroRing label="Углеводы" current={consumed.carbs_g} target={goal.carbs_g} unit="г" color={c.info} icon="🍞" />
                 </div>
               </Card>
             )
@@ -883,7 +882,7 @@ export function NutritionPage() {
                 <Card key={mt.value} padding="lg">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: mt.color }} />
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: [c.warning, c.success, c.info, c.primary][['breakfast', 'lunch', 'dinner', 'snack'].indexOf(mt.value)] ?? c.muted }} />
                       <Text fontWeight="semibold" size="lg">{mt.label}</Text>
                       <Text muted size="sm">{mealCalories} ккал</Text>
                     </div>
@@ -892,7 +891,7 @@ export function NutritionPage() {
                         + Добавить
                       </Button>
                       {meal && (
-                        <Button variant="ghost" size="sm" onPress={() => { if (confirm('Удалить приём пищи?')) deleteMeal(meal.id); }}>
+                        <Button variant="ghost" size="sm" onPress={() => { if (confirm('Удалить приём пищи?')) deleteMeal(meal.id); }} aria-label="Удалить приём пищи">
                           🗑️
                         </Button>
                       )}
@@ -902,7 +901,7 @@ export function NutritionPage() {
                   {meal && meal.items.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
                       {meal.items.map((item) => (
-                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', borderRadius: 6, background: tokens.colors.surfaceHover, opacity: deletingItemId === item.id ? 0.5 : 1 }}>
+                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', borderRadius: 6, background: c.surfaceHover, opacity: deletingItemId === item.id ? 0.5 : 1 }}>
                           <div>
                             <Text size="sm">{item.name}</Text>
                             <Text muted size="xs">{item.grams}г</Text>

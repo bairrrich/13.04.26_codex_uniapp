@@ -179,8 +179,8 @@ export function GoalsTab({ onAddReady }: { onAddReady?: (fn: () => void) => void
                   </div>
                   <div style={{ display: 'flex', gap: 4 }}>
                     <Button variant="ghost" size="sm" onPress={() => setAddAmountId(goal.id)}>➕</Button>
-                    <Button variant="ghost" size="sm" onPress={() => handleEdit(goal)}>✏️</Button>
-                    <Button variant="ghost" size="sm" onPress={() => handleDelete(goal.id)}>🗑️</Button>
+                    <Button variant="ghost" size="sm" onPress={() => handleEdit(goal)} aria-label="Редактировать цель">✏️</Button>
+                    <Button variant="ghost" size="sm" onPress={() => handleDelete(goal.id)} aria-label="Удалить цель">🗑️</Button>
                   </div>
                 </div>
 

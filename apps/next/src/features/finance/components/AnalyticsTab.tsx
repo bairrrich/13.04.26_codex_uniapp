@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { transactionService, type CategoryBreakdown, type MonthlyTrend } from '../services/financeService';
-import { Card, Text, Button, Badge, Skeleton } from '@superapp/ui';
-import { tokens } from '@superapp/ui';
+import { Card, Text, Button, Badge, Skeleton, useTheme, tokens } from '@superapp/ui';
 
 function formatCurrency(amountMinor: number): string {
   return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(amountMinor / 100);
@@ -16,6 +15,7 @@ export function AnalyticsTab() {
   const [monthlyTrend, setMonthlyTrend] = useState<MonthlyTrend[]>([]);
   const [stats, setStats] = useState<{ totalIncome: number; totalExpense: number; balance: number } | null>(null);
   const [period, setPeriod] = useState<'3' | '6' | '12'>('6');
+  const { tokens: c } = useTheme();
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -59,9 +59,9 @@ export function AnalyticsTab() {
         </div>
       ) : stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-          <StatCard label="Доходы" value={formatCurrency(stats.totalIncome)} color={tokens.colors.success} />
-          <StatCard label="Расходы" value={formatCurrency(stats.totalExpense)} color={tokens.colors.error} />
-          <StatCard label="Баланс" value={formatCurrency(stats.balance)} color={stats.balance >= 0 ? tokens.colors.success : tokens.colors.error} />
+          <StatCard label="Доходы" value={formatCurrency(stats.totalIncome)} color={c.success} />
+          <StatCard label="Расходы" value={formatCurrency(stats.totalExpense)} color={c.error} />
+          <StatCard label="Баланс" value={formatCurrency(stats.balance)} color={stats.balance >= 0 ? c.success : c.error} />
         </div>
       )}
 
@@ -81,8 +81,8 @@ export function AnalyticsTab() {
                 return (
                   <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                     <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: 120 }}>
-                      <div style={{ width: 12, height: incomeHeight, background: tokens.colors.success, borderRadius: '4px 4px 0 0', minHeight: 2 }} />
-                      <div style={{ width: 12, height: expenseHeight, background: tokens.colors.error, borderRadius: '4px 4px 0 0', minHeight: 2 }} />
+                      <div style={{ width: 12, height: incomeHeight, background: c.success, borderRadius: '4px 4px 0 0', minHeight: 2 }} />
+                      <div style={{ width: 12, height: expenseHeight, background: c.error, borderRadius: '4px 4px 0 0', minHeight: 2 }} />
                     </div>
                     <Text muted size="xs">{m.month}</Text>
                   </div>
@@ -91,11 +91,11 @@ export function AnalyticsTab() {
             </div>
             <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: tokens.colors.success }} />
+                <div style={{ width: 10, height: 10, borderRadius: 2, background: c.success }} />
                 <Text muted size="sm">Доходы</Text>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: tokens.colors.error }} />
+                <div style={{ width: 10, height: 10, borderRadius: 2, background: c.error }} />
                 <Text muted size="sm">Расходы</Text>
               </div>
             </div>
@@ -146,7 +146,7 @@ export function AnalyticsTab() {
                       <Text size="sm" as="span">{cat.category_icon ?? ''} {cat.category_name} <Text muted as="span">({percentage}%)</Text></Text>
                       <Text size="sm" fontWeight="semibold">{formatCurrency(cat.total)}</Text>
                     </div>
-                    <div style={{ height: 6, borderRadius: 3, background: tokens.colors.border, overflow: 'hidden' }}>
+                    <div style={{ height: 6, borderRadius: 3, background: c.border, overflow: 'hidden' }}>
                       <div style={{ width: `${width}%`, height: '100%', background: cat.category_color, borderRadius: 3, transition: `width ${tokens.transitions.slow}` }} />
                     </div>
                   </div>
@@ -178,7 +178,7 @@ export function AnalyticsTab() {
                     </Text>
                     <Text size="sm" fontWeight="semibold">{formatCurrency(cat.total)}</Text>
                   </div>
-                  <div style={{ height: 6, borderRadius: 3, background: tokens.colors.border, overflow: 'hidden' }}>
+                  <div style={{ height: 6, borderRadius: 3, background: c.border, overflow: 'hidden' }}>
                     <div style={{ width: `${width}%`, height: '100%', background: cat.category_color, borderRadius: 3, transition: `width ${tokens.transitions.slow}` }} />
                   </div>
                 </div>

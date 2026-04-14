@@ -1,80 +1,73 @@
 'use client';
 
-import { useState } from 'react';
-import { fitnessService } from '../services/fitnessService';
-import type { WorkoutSession } from '../services/fitnessService';
-import { Card, Text, Badge, Button, Divider } from '@superapp/ui';
+import { useState, useEffect, useCallback } from 'react';
+import { fitnessService, type WorkoutSession } from '../services/fitnessService';
+import { Card, Text, Badge, Button, Skeleton, useTheme } from '@superapp/ui';
 
 interface WorkoutListProps {
-  workouts: WorkoutSession[];
-  loading: boolean;
-  onRefresh: () => void;
+  onSelectSession?: (sessionId: string) => void;
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+export function WorkoutList({ onSelectSession }: WorkoutListProps) {
+  const { tokens: c } = useTheme();
+  const [sessions, setSessions] = useState<WorkoutSession[]>([]);
+  const [loading, setLoading] = useState(true);
 
-function formatDuration(startedAt: string, endedAt: string | null): string {
-  if (!endedAt) return 'В процессе...';
-  const start = new Date(startedAt).getTime();
-  const end = new Date(endedAt).getTime();
-  const minutes = Math.round((end - start) / 60000);
-  if (minutes < 60) return `${minutes} мин`;
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return `${hours} ч ${remainingMinutes} мин`;
-}
+  const loadSessions = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await fitnessService.getRecentWorkouts(50);
+      setSessions(data);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-function formatDurationBadge(startedAt: string, endedAt: string | null): { text: string; variant: 'primary' | 'warning' | 'success' } {
-  if (!endedAt) return { text: 'В процессе...', variant: 'warning' };
-  const start = new Date(startedAt).getTime();
-  const end = new Date(endedAt).getTime();
-  const minutes = Math.round((end - start) / 60000);
-  if (minutes < 30) return { text: `${minutes} мин`, variant: 'primary' };
-  if (minutes < 60) return { text: `${minutes} мин`, variant: 'success' };
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return { text: `${hours} ч ${remainingMinutes} мин`, variant: 'success' };
-}
-
-export function WorkoutList({ workouts, loading, onRefresh }: WorkoutListProps) {
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  useEffect(() => { loadSessions(); }, [loadSessions]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Удалить тренировку?')) return;
-    setDeletingId(id);
-    try {
-      await fitnessService.delete(id);
-      onRefresh();
-    } catch {
-      alert('Ошибка удаления');
-    } finally {
-      setDeletingId(null);
-    }
+    await fitnessService.delete(id);
+    loadSessions();
+  };
+
+  const getDuration = (session: WorkoutSession): number | null => {
+    if (!session.ended_at) return null;
+    return Math.round((new Date(session.ended_at).getTime() - new Date(session.started_at).getTime()) / 60000);
+  };
+
+  const getDurationColor = (minutes: number): string => {
+    if (minutes < 30) return c.info;
+    if (minutes < 60) return c.success;
+    if (minutes < 90) return c.warning;
+    return c.error;
   };
 
   if (loading) {
     return (
-      <Card padding="xl">
-        <Text muted textAlign="center">Загрузка тренировок...</Text>
-      </Card>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {[1, 2, 3].map((i) => (
+          <Card key={i} padding="lg">
+            <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: c.surfaceHover }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ width: 120, height: 14, background: c.surfaceHover, borderRadius: 6, marginBottom: 8 }} />
+                <div style={{ width: 80, height: 12, background: c.surfaceHover, borderRadius: 6 }} />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
     );
   }
 
-  if (workouts.length === 0) {
+  if (sessions.length === 0) {
     return (
-      <Card variant="outlined" padding="xl">
+      <Card padding="2xl" variant="outlined">
         <div style={{ textAlign: 'center' }}>
-          <Text muted size="lg">Тренировок пока нет</Text>
-          <Text muted size="sm" style={{ marginTop: 8 }}>
-            Начните первую тренировку, заполнив форму выше!
-          </Text>
+          <div style={{ fontSize: 48, marginBottom: 8 }}>🏋️</div>
+          <Text muted size="lg">Нет тренировок</Text>
+          <Text muted size="sm" style={{ marginTop: 4 }}>Начните свою первую тренировку!</Text>
         </div>
       </Card>
     );
@@ -82,49 +75,60 @@ export function WorkoutList({ workouts, loading, onRefresh }: WorkoutListProps) 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {workouts.map((workout) => {
-        const durationInfo = formatDurationBadge(workout.started_at, workout.ended_at);
+      {sessions.map((session) => {
+        const duration = getDuration(session);
         return (
-          <Card key={workout.id} padding="md">
-            {/* Header: date and duration */}
+          <Card key={session.id} padding="lg" hoverable>
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                marginBottom: 8,
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 12,
+                cursor: onSelectSession ? 'pointer' : 'default',
               }}
+              onClick={() => onSelectSession?.(session.id)}
             >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <Text muted size="sm">{formatDate(workout.started_at)}</Text>
-                <Badge variant={durationInfo.variant} size="sm">
-                  {durationInfo.text}
-                </Badge>
-              </div>
-              <Button
-                variant="danger"
-                size="sm"
-                loading={deletingId === workout.id}
-                onPress={() => handleDelete(workout.id)}
-              >
-                Удалить
-              </Button>
-            </div>
-
-            <Divider />
-
-            {/* Notes section */}
-            {workout.notes ? (
-              <div style={{ marginTop: 8 }}>
-                <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
-                  {workout.notes}
+              <div>
+                <Text fontWeight="semibold" size="lg">
+                  {session.title || 'Тренировка'}
                 </Text>
+                <Text muted size="sm">
+                  {new Date(session.started_at).toLocaleDateString('ru-RU', {
+                    day: 'numeric',
+                    month: 'long',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </Text>
+                {session.notes && (
+                  <Text muted size="sm" style={{ marginTop: 4, maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {session.notes}
+                  </Text>
+                )}
               </div>
-            ) : (
-              <Text muted size="sm" style={{ marginTop: 8 }}>
-                Без заметок
-              </Text>
-            )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {duration !== null && (
+                  <Badge size="sm" style={{ background: getDurationColor(duration), color: c.text }}>
+                    ⏱ {duration} мин
+                  </Badge>
+                )}
+                {session.ended_at ? (
+                  <Badge variant="success" size="sm">✓</Badge>
+                ) : (
+                  <Badge variant="warning" dot>В процессе</Badge>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onPress={() => handleDelete(session.id)}
+                  aria-label="Удалить тренировку"
+                >
+                  🗑️
+                </Button>
+              </div>
+            </div>
           </Card>
         );
       })}

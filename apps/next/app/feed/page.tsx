@@ -30,7 +30,7 @@ export default function FeedPage() {
       <div style={{ display: 'flex', gap: 4, marginBottom: 24, overflowX: 'auto', paddingBottom: 8 }}>
         {moduleTabs.map((tab) => (
           <a key={tab.href} href={tab.href} style={{ textDecoration: 'none' }}>
-            <Button variant={tab.href === '/feed' ? 'primary' : 'ghost'} size="sm">{tab.label}</Button>
+            <Button variant={tab.href === '/feed' ? 'primary' : 'secondary'} size="sm">{tab.label}</Button>
           </a>
         ))}
       </div>

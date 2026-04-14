@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { accountService, type Account } from '../services/financeService';
-import { Card, Text, Button, Input, Select, Badge, Skeleton, Divider, Modal } from '@superapp/ui';
-import { tokens } from '@superapp/ui';
+import { Card, Text, Button, Input, Select, Badge, Skeleton, Divider, Modal, useTheme } from '@superapp/ui';
 
 function formatCurrency(amountMinor: number, currency = 'RUB'): string {
   return new Intl.NumberFormat('ru-RU', { style: 'currency', currency, minimumFractionDigits: 0 }).format(amountMinor / 100);
@@ -24,6 +23,7 @@ export function AccountsTab({ onAddReady }: { onAddReady?: (fn: () => void) => v
   const [formCurrency, setFormCurrency] = useState('RUB');
   const [formBalance, setFormBalance] = useState('0');
   const [saving, setSaving] = useState(false);
+  const { tokens: c } = useTheme();
 
   const loadAccounts = useCallback(async () => {
     setLoading(true);
@@ -91,7 +91,7 @@ export function AccountsTab({ onAddReady }: { onAddReady?: (fn: () => void) => v
   return (
     <div>
       {/* Summary */}
-      <Card padding="lg" style={{ marginBottom: 24, background: `linear-gradient(135deg, ${tokens.colors.surface}, ${tokens.colors.surfaceActive})` }}>
+      <Card padding="lg" style={{ marginBottom: 24, background: `linear-gradient(135deg, ${c.surface}, ${c.surfaceActive})` }}>
         <Text muted size="sm">Общий баланс</Text>
         <Text size="3xl" fontWeight="bold" style={{ marginTop: 4 }}>{formatCurrency(totalBalance)}</Text>
         <Text muted size="sm" style={{ marginTop: 4 }}>{accounts.length} счетов</Text>
@@ -151,12 +151,12 @@ export function AccountsTab({ onAddReady }: { onAddReady?: (fn: () => void) => v
                   <Badge variant="default" size="sm" style={{ marginTop: 4 }}>{acc.currency_code}</Badge>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <Text size="xl" fontWeight="bold" style={{ color: acc.balance_minor >= 0 ? tokens.colors.success : tokens.colors.error }}>
+                  <Text size="xl" fontWeight="bold" style={{ color: acc.balance_minor >= 0 ? c.success : c.error }}>
                     {formatCurrency(acc.balance_minor, acc.currency_code)}
                   </Text>
                   <div style={{ display: 'flex', gap: 4 }}>
-                    <Button variant="ghost" size="sm" onPress={() => handleEdit(acc)}>✏️</Button>
-                    <Button variant="ghost" size="sm" onPress={() => handleDelete(acc.id)}>🗑️</Button>
+                    <Button variant="ghost" size="sm" onPress={() => handleEdit(acc)} aria-label="Редактировать счёт">✏️</Button>
+                    <Button variant="ghost" size="sm" onPress={() => handleDelete(acc.id)} aria-label="Удалить счёт">🗑️</Button>
                   </div>
                 </div>
               </div>

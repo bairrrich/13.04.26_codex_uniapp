@@ -48,6 +48,9 @@ export type { AppFooterProps } from './components/AppFooter';
 export { Modal } from './components/Modal';
 export type { ModalProps } from './components/Modal';
 
+export { StatCard } from './components/StatCard';
+export type { StatCardProps } from './components/StatCard';
+
 export { ThemeProvider, useTheme } from './ThemeProvider';
 export type { Theme } from './ThemeProvider';
 

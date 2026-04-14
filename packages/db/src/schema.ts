@@ -276,8 +276,11 @@ export const waterLogs = pgTable('water_logs', {
 
 export const exerciseDefinitions = pgTable('exercise_definitions', {
   id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull(),
+  name: text('name').notNull().unique(),
   muscleGroup: text('muscle_group'),
+  equipment: text('equipment'),
+  description: text('description'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 export const workoutSessions = pgTable('workout_sessions', {
@@ -288,6 +291,9 @@ export const workoutSessions = pgTable('workout_sessions', {
   startedAt: timestamp('started_at').notNull().defaultNow(),
   endedAt: timestamp('ended_at'),
   notes: text('notes'),
+  title: text('title'),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 export const workoutExercises = pgTable('workout_exercises', {
@@ -298,7 +304,7 @@ export const workoutExercises = pgTable('workout_exercises', {
   exerciseId: uuid('exercise_id')
     .notNull()
     .references(() => exerciseDefinitions.id, { onDelete: 'restrict' }),
-  sortOrder: text('sort_order').notNull(),
+  sortOrder: text('sort_order').notNull().default('0'),
 });
 
 export const workoutSets = pgTable('workout_sets', {
@@ -306,10 +312,25 @@ export const workoutSets = pgTable('workout_sets', {
   workoutExerciseId: uuid('workout_exercise_id')
     .notNull()
     .references(() => workoutExercises.id, { onDelete: 'cascade' }),
-  reps: text('reps').notNull(),
+  reps: text('reps'),
   weightGrams: text('weight_grams'),
   restSeconds: text('rest_seconds'),
-  setOrder: text('set_order').notNull(),
+  setOrder: text('set_order').notNull().default('0'),
+  isWarmup: text('is_warmup').notNull().default('false'),
+  rpe: text('rpe'),
+  failure: text('failure').notNull().default('false'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+// Body Weight Tracking
+export const bodyWeightLogs = pgTable('body_weight_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  weightGrams: text('weight_grams').notNull(),
+  notes: text('notes'),
+  loggedAt: timestamp('logged_at').notNull().defaultNow(),
 });
 
 // ==================== COLLECTIONS ====================
@@ -324,7 +345,14 @@ export const collectionItems = pgTable('collection_items', {
   status: text('status', { enum: ['planned', 'in_progress', 'completed', 'dropped'] }).notNull(),
   rating: smallint('rating'),
   metadata: jsonb('metadata').default('{}'),
+  notes: text('notes'),
+  coverUrl: text('cover_url'),
+  sourceUrl: text('source_url'),
+  dateStarted: timestamp('date_started'),
+  dateCompleted: timestamp('date_completed'),
+  rewatchCount: text('rewatch_count').notNull().default('0'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 // ==================== FEED / SOCIAL ====================

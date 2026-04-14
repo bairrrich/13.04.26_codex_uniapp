@@ -20,18 +20,22 @@ export function useTheme(): ThemeContextValue {
 }
 
 export function ThemeProvider({ children, defaultTheme = 'dark' }: { children: ReactNode; defaultTheme?: Theme }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('theme') as Theme) || defaultTheme;
-    }
-    return defaultTheme;
-  });
+  // Start with defaultTheme on both server and client to avoid hydration mismatch
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
 
+  // Sync from localStorage after hydration
+  useEffect(() => {
+    const stored = localStorage.getItem('theme') as Theme | null;
+    if (stored && stored !== defaultTheme) {
+      setTheme(stored);
+    }
+  }, [defaultTheme]);
+
+  // Apply theme side effects
   useEffect(() => {
     localStorage.setItem('theme', theme);
     document.documentElement.style.colorScheme = theme;
 
-    // Apply CSS custom properties and body styles
     const root = document.documentElement;
     const c = theme === 'dark' ? darkTheme.colors : lightTheme.colors;
     root.style.setProperty('--color-background', c.background);
@@ -50,7 +54,6 @@ export function ThemeProvider({ children, defaultTheme = 'dark' }: { children: R
     root.style.setProperty('--color-error', c.error);
     root.style.setProperty('--color-warning', c.warning);
 
-    // Apply body styles directly
     document.body.style.background = c.background;
     document.body.style.color = c.text;
   }, [theme]);

@@ -95,24 +95,14 @@ export default function FinancePage() {
       {/* Tabs */}
       <div style={{ display: 'flex', gap: isMobile ? 2 : 4, marginBottom: 24, flexWrap: 'wrap', overflowX: 'auto', paddingBottom: 8 }}>
         {TABS.map((tab) => (
-          <button
+          <Button
             key={tab}
-            onClick={() => setActiveTab(tab)}
-            style={{
-              padding: isMobile ? '6px 10px' : '8px 16px',
-              fontSize: isMobile ? tokens.fontSizes.xs : tokens.fontSizes.sm,
-              fontWeight: activeTab === tab ? tokens.fontWeights.semibold : tokens.fontWeights.medium,
-              color: activeTab === tab ? tokens.colors.primary : tokens.colors.textSecondary,
-              backgroundColor: activeTab === tab ? tokens.colors.primaryLight : 'transparent',
-              border: `1px solid ${activeTab === tab ? tokens.colors.primary : tokens.colors.border}`,
-              borderRadius: tokens.radius.md,
-              cursor: 'pointer',
-              transition: `all ${tokens.transitions.fast}`,
-              fontFamily: 'inherit',
-            }}
+            variant={activeTab === tab ? 'primary' : 'secondary'}
+            size={isMobile ? 'xs' : 'sm'}
+            onPress={() => setActiveTab(tab)}
           >
             {tab}
-          </button>
+          </Button>
         ))}
       </div>
 

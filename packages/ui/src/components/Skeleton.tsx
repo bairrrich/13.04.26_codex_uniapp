@@ -23,7 +23,7 @@ export function Skeleton({ width, height = 20, borderRadius, variant = 'rect', a
       width: typeof width === 'number' ? `${width}px` : width ?? '100%',
       height: typeof height === 'number' ? `${height}px` : height,
       borderRadius: typeof radius === 'number' ? `${radius}px` : radius,
-      background: `linear-gradient(90deg, ${colors.surface} 25%, ${colors.surfaceHover} 50%, ${colors.surface} 75%)`,
+      backgroundImage: `linear-gradient(90deg, ${colors.surface} 25%, ${colors.surfaceHover} 50%, ${colors.surface} 75%)`,
       backgroundSize: '200% 100%',
       animation: animation === 'wave' ? 'skeleton-wave 1.5s ease-in-out infinite' : animation === 'pulse' ? 'skeleton-pulse 1.5s ease-in-out infinite' : 'none',
       ...style,
